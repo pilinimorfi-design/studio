@@ -31,7 +31,7 @@ export interface ShopifyProduct {
 const PRODUCT_FIELDS = `
   id title description handle
   priceRange { minVariantPrice { amount currencyCode } }
-  images(first: 5) { edges { node { url altText } } }
+  images(first: 5) { edges { node { url(transform: {maxWidth: 1000, maxHeight: 1000, crop: CENTER}) altText } } }
   variants(first: 10) { edges { node { id title price { amount currencyCode } availableForSale selectedOptions { name value } } } }
   options { name values }
 `;

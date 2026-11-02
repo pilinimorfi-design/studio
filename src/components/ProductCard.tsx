@@ -29,9 +29,9 @@ export function ProductCard({ product }: { product: ShopifyProduct }) {
     <article className="group flex flex-col">
       <Link to="/product/$handle" params={{ handle: p.handle }} className="block overflow-hidden rounded-md bg-muted shadow-soft">
         {img ? (
-          <img src={img.url} alt={img.altText ?? p.title} loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          <img src={img.url} alt={img.altText ?? p.title} loading="lazy" width={1000} height={1000} className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105" />
         ) : (
-          <div className="aspect-[4/5] w-full" />
+          <div className="aspect-square w-full" />
         )}
       </Link>
       <div className="mt-4 flex flex-1 flex-col">
