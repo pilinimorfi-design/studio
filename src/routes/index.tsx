@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
-import { MapPin, Video } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { homeContentQuery, productsQuery } from "@/lib/queries";
@@ -8,6 +8,7 @@ import { CATEGORIES } from "@/lib/categories";
 import { useState } from "react";
 
 const ALL = "Όλα";
+const PAGE_SIZE = 8;
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,7 +28,21 @@ function Index() {
   const { hero, about } = content;
   const products = useQuery(productsQuery);
   const [category, setCategory] = useState<string>(ALL);
+  const [page, setPage] = useState(1);
   const visible = (products.data ?? []).filter((p) => category === ALL || p.node.productType === category);
+  const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const paged = visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const selectCategory = (c: string) => {
+    setCategory(c);
+    setPage(1);
+  };
+
+  const goToPage = (n: number) => {
+    setPage(n);
+    document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <>
@@ -57,24 +72,41 @@ function Index() {
           {[ALL, ...CATEGORIES].map((c) => {
             const count = c === ALL ? products.data?.length ?? 0 : (products.data ?? []).filter((p) => p.node.productType === c).length;
             return (
-              <Button key={c} size="sm" variant={category === c ? "default" : "outline"} onClick={() => setCategory(c)}>
+              <Button key={c} size="sm" variant={category === c ? "default" : "outline"} onClick={() => selectCategory(c)}>
                 {c} <span className="opacity-60">({count})</span>
               </Button>
             );
           })}
         </div>
         {products.isLoading ? (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {[0, 1, 2].map((i) => (
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
               <div key={i} className="aspect-square animate-pulse rounded-md bg-muted" />
             ))}
           </div>
         ) : visible.length > 0 ? (
-          <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-            {visible.map((p) => (
-              <ProductCard key={p.node.id} product={p} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+              {paged.map((p) => (
+                <ProductCard key={p.node.id} product={p} />
+              ))}
+            </div>
+            {pageCount > 1 && (
+              <nav aria-label="Σελιδοποίηση προϊόντων" className="mt-12 flex items-center justify-center gap-2">
+                <Button variant="outline" size="icon" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} aria-label="Προηγούμενη σελίδα">
+                  <ChevronLeft />
+                </Button>
+                {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
+                  <Button key={n} variant={n === currentPage ? "default" : "outline"} size="icon" onClick={() => goToPage(n)} aria-label={`Σελίδα ${n}`} aria-current={n === currentPage ? "page" : undefined}>
+                    {n}
+                  </Button>
+                ))}
+                <Button variant="outline" size="icon" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === pageCount} aria-label="Επόμενη σελίδα">
+                  <ChevronRight />
+                </Button>
+              </nav>
+            )}
+          </>
         ) : (
           <div className="rounded-md border border-dashed py-16 text-center text-muted-foreground">
             Δεν βρέθηκαν προϊόντα ακόμη.
