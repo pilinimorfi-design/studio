@@ -28,7 +28,21 @@ function Index() {
   const { hero, about } = content;
   const products = useQuery(productsQuery);
   const [category, setCategory] = useState<string>(ALL);
+  const [page, setPage] = useState(1);
   const visible = (products.data ?? []).filter((p) => category === ALL || p.node.productType === category);
+  const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const paged = visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const selectCategory = (c: string) => {
+    setCategory(c);
+    setPage(1);
+  };
+
+  const goToPage = (n: number) => {
+    setPage(n);
+    document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <>
