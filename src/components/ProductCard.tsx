@@ -47,6 +47,13 @@ export function ProductCard({ product }: { product: ShopifyProduct }) {
         <Button variant="outline" className="mt-4" onClick={add} disabled={isLoading || !variant?.availableForSale}>
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : variant?.availableForSale === false ? "Εξαντλήθηκε" : "Προσθήκη στο καλάθι"}
         </Button>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Δεν δεχόμαστε επιστροφές ·{" "}
+          <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
+            Όροι Χρήσης
+          </Link>
+        </p>
+
       </div>
     </article>
   );
