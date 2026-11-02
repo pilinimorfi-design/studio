@@ -4,6 +4,10 @@ import { MapPin, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { homeContentQuery, productsQuery } from "@/lib/queries";
+import { CATEGORIES } from "@/lib/categories";
+import { useState } from "react";
+
+const ALL = "Όλα";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,6 +26,8 @@ function Index() {
   const { data: content } = useSuspenseQuery(homeContentQuery);
   const { hero, about } = content;
   const products = useQuery(productsQuery);
+  const [category, setCategory] = useState<string>(ALL);
+  const visible = (products.data ?? []).filter((p) => category === ALL || p.node.productType === category);
 
   return (
     <>
@@ -44,8 +50,18 @@ function Index() {
       </section>
 
       <section id="products" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20">
-        <div className="mb-10 flex items-end justify-between">
+        <div className="mb-6 flex items-end justify-between">
           <h2 className="font-display text-3xl md:text-4xl">Τα κεραμικά μας</h2>
+        </div>
+        <div className="mb-10 flex flex-wrap gap-2">
+          {[ALL, ...CATEGORIES].map((c) => {
+            const count = c === ALL ? products.data?.length ?? 0 : (products.data ?? []).filter((p) => p.node.productType === c).length;
+            return (
+              <Button key={c} size="sm" variant={category === c ? "default" : "outline"} onClick={() => setCategory(c)}>
+                {c} <span className="opacity-60">({count})</span>
+              </Button>
+            );
+          })}
         </div>
         {products.isLoading ? (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -53,9 +69,9 @@ function Index() {
               <div key={i} className="aspect-square animate-pulse rounded-md bg-muted" />
             ))}
           </div>
-        ) : products.data && products.data.length > 0 ? (
+        ) : visible.length > 0 ? (
           <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-            {products.data.map((p) => (
+            {visible.map((p) => (
               <ProductCard key={p.node.id} product={p} />
             ))}
           </div>

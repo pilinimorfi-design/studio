@@ -63,6 +63,10 @@ function ProductPage() {
         <div>
           <h1 className="font-display text-4xl">{p.title}</h1>
           {variant && <p className="mt-3 text-2xl font-semibold">{formatPrice(variant.price.amount, variant.price.currencyCode)}</p>}
+          <p className="mt-2 text-sm text-muted-foreground">
+            {p.productType && <>Κατηγορία: {p.productType}</>}
+            {variant?.sku && <> · Κωδικός: {variant.sku}</>}
+          </p>
           <p className="mt-6 whitespace-pre-line leading-relaxed text-muted-foreground">{p.description}</p>
           {variants.length > 1 && (
             <div className="mt-6 flex flex-wrap gap-2">
