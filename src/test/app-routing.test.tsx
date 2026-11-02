@@ -22,5 +22,14 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).toBe("/terms");
   });
+
+  it("matches a page for /privacy instead of falling back to not found", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/privacy");
+
+    expect(matches.at(-1)?.routeId).toBe("/privacy");
+  });
 });
+
 

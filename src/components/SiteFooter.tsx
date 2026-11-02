@@ -9,8 +9,12 @@ export function SiteFooter() {
           <Link to="/terms" className="opacity-75 hover:opacity-100">
             Όροι Χρήσης
           </Link>
+          <Link to="/privacy" className="opacity-75 hover:opacity-100">
+            Πολιτική Απορρήτου
+          </Link>
           <p className="opacity-75">Χειροποίητα κεραμικά · © {new Date().getFullYear()}</p>
         </nav>
+
       </div>
     </footer>
   );

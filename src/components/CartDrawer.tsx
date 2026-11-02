@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Link } from "@tanstack/react-router";
+
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ShoppingBag, Minus, Plus, Trash2, ExternalLink, Loader2 } from "lucide-react";
@@ -90,6 +92,17 @@ export function CartDrawer() {
               <Button onClick={checkout} size="lg" className="w-full" disabled={isLoading || isSyncing}>
                 {isLoading || isSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ExternalLink className="h-4 w-4" />Ολοκλήρωση αγοράς</>}
               </Button>
+              <p className="text-center text-xs text-muted-foreground">
+                Δεν δεχόμαστε επιστροφές προϊόντων ·{" "}
+                <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
+                  Όροι Χρήσης
+                </Link>{" "}
+                ·{" "}
+                <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground">
+                  Πολιτική Απορρήτου
+                </Link>
+              </p>
+
             </div>
           </>
         )}
