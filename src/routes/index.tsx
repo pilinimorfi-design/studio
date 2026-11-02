@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
-import { MapPin, Video } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { homeContentQuery, productsQuery } from "@/lib/queries";
@@ -8,6 +8,7 @@ import { CATEGORIES } from "@/lib/categories";
 import { useState } from "react";
 
 const ALL = "Όλα";
+const PAGE_SIZE = 8;
 
 export const Route = createFileRoute("/")({
   head: () => ({
