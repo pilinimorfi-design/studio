@@ -11,6 +11,7 @@ export interface ShopifyProduct {
     title: string;
     description: string;
     handle: string;
+    productType?: string;
     priceRange: { minVariantPrice: { amount: string; currencyCode: string } };
     images: { edges: Array<{ node: { url: string; altText: string | null } }> };
     variants: {
@@ -18,6 +19,7 @@ export interface ShopifyProduct {
         node: {
           id: string;
           title: string;
+          sku?: string | null;
           price: { amount: string; currencyCode: string };
           availableForSale: boolean;
           selectedOptions: Array<{ name: string; value: string }>;
@@ -29,10 +31,10 @@ export interface ShopifyProduct {
 }
 
 const PRODUCT_FIELDS = `
-  id title description handle
+  id title description handle productType
   priceRange { minVariantPrice { amount currencyCode } }
   images(first: 5) { edges { node { url(transform: {maxWidth: 1000, maxHeight: 1000, crop: CENTER}) altText } } }
-  variants(first: 10) { edges { node { id title price { amount currencyCode } availableForSale selectedOptions { name value } } } }
+  variants(first: 10) { edges { node { id title sku price { amount currencyCode } availableForSale selectedOptions { name value } } } }
   options { name values }
 `;
 
