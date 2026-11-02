@@ -10,3 +10,5 @@ export const homeContentQuery = queryOptions({
   queryFn: async () => ({ hero: await siteContent.getHero(), about: await siteContent.getAbout() }),
 });
 export const seminarsQuery = queryOptions({ queryKey: ["content", "seminars"], queryFn: () => siteContent.getSeminars() });
+export const termsQuery = queryOptions({ queryKey: ["content", "terms"], queryFn: () => siteContent.getTerms() });
+
