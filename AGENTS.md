@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Editorial copy (hero, about, seminars) is read only through async getters in src/content/site.ts; products only through src/lib/shopify.ts. Why: swap in an external CMS without touching components.
+- When creating Shopify products, do not enable inventory tracking (leave inventory_management unset). Why: a tracked variant with zero quantity shows as "Εξαντλήθηκε" and cannot be bought.
