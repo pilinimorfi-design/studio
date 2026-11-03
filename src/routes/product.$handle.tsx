@@ -75,9 +75,14 @@ function ProductPage() {
               ))}
             </div>
           )}
-          <Button size="lg" className="mt-8 w-full sm:w-auto" onClick={add} disabled={cartLoading || !variant?.availableForSale}>
-            {cartLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : variant?.availableForSale === false ? "Εξαντλήθηκε" : "Προσθήκη στο καλάθι"}
-          </Button>
+          {variant?.availableForSale === false ? (
+            <p className="mt-8 text-sm font-medium text-muted-foreground">Εξαντλήθηκε</p>
+          ) : (
+            <Button size="lg" className="mt-8 w-full sm:w-auto" onClick={add} disabled={cartLoading}>
+              {cartLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Προσθήκη στο καλάθι"}
+            </Button>
+          )}
+
         </div>
       </div>
     </div>
