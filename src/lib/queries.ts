@@ -12,5 +12,9 @@ export const homeContentQuery = queryOptions({
 export const seminarsQuery = queryOptions({ queryKey: ["content", "seminars"], queryFn: () => siteContent.getSeminars() });
 export const termsQuery = queryOptions({ queryKey: ["content", "terms"], queryFn: () => siteContent.getTerms() });
 export const privacyQuery = queryOptions({ queryKey: ["content", "privacy"], queryFn: () => siteContent.getPrivacy() });
+export const seminarTermsQuery = queryOptions({
+  queryKey: ["content", "seminar-terms"],
+  queryFn: () => siteContent.getSeminarTerms(),
+});
 
 
