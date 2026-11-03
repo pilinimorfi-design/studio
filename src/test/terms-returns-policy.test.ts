@@ -18,7 +18,7 @@ describe("Όροι Χρήσης — επιστροφές", () => {
   it("offers a refund when the product arrives broken", async () => {
     const { text } = await returnsSection();
 
-    expect(text).toContain("Επιστροφή χρημάτων");
+    expect(text).toContain("επιστροφή χρημάτων");
     expect(text).toContain("φτάσει σπασμένο");
   });
 
