@@ -20,11 +20,19 @@ describe("Όροι Χρήσης — λογαριασμός, BoxNow και τηλ
     expect(text).toContain("σημείο παραλαβής");
   });
 
-  it("charges phone-order shipping according to the customer's choice", async () => {
+  it("sets phone-order shipping by courier choice, weight and volume", async () => {
     const text = await ordersText();
 
     expect(text).toContain("τηλεφωνικές παραγγελίες");
     expect(text).toContain("έξοδα αποστολής");
-    expect(text).toContain("επιλογή του πελάτη");
+    expect(text).toContain("επιλογή της μεταφορικής");
+    expect(text).toContain("βάρος του αντικειμένου");
+    expect(text).toContain("όγκο των αντικειμένων");
+  });
+
+  it("offers free pickup from the workshop", async () => {
+    const text = await ordersText();
+
+    expect(text).toContain("παραλαβή από το εργαστήριο Πήλινη Μορφή είναι δωρεάν");
   });
 });
