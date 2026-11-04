@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as SeminarTermsRouteImport } from './routes/seminar-terms'
 import { Route as SeminarsRouteImport } from './routes/seminars'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ProductHandleRouteImport } from './routes/product.$handle'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeminarTermsRoute = SeminarTermsRouteImport.update({
+  id: '/seminar-terms',
+  path: '/seminar-terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SeminarsRoute = SeminarsRouteImport.update({
@@ -44,6 +50,7 @@ const ProductHandleRoute = ProductHandleRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
+  '/seminar-terms': typeof SeminarTermsRoute
   '/seminars': typeof SeminarsRoute
   '/terms': typeof TermsRoute
   '/product/$handle': typeof ProductHandleRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
+  '/seminar-terms': typeof SeminarTermsRoute
   '/seminars': typeof SeminarsRoute
   '/terms': typeof TermsRoute
   '/product/$handle': typeof ProductHandleRoute
@@ -59,22 +67,42 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
+  '/seminar-terms': typeof SeminarTermsRoute
   '/seminars': typeof SeminarsRoute
   '/terms': typeof TermsRoute
   '/product/$handle': typeof ProductHandleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/privacy' | '/seminars' | '/terms' | '/product/$handle'
+  fullPaths:
+    | '/'
+    | '/privacy'
+    | '/seminar-terms'
+    | '/seminars'
+    | '/terms'
+    | '/product/$handle'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/privacy' | '/seminars' | '/terms' | '/product/$handle'
+  to:
+    | '/'
+    | '/privacy'
+    | '/seminar-terms'
+    | '/seminars'
+    | '/terms'
+    | '/product/$handle'
   id:
-    '__root__' | '/' | '/privacy' | '/seminars' | '/terms' | '/product/$handle'
+    | '__root__'
+    | '/'
+    | '/privacy'
+    | '/seminar-terms'
+    | '/seminars'
+    | '/terms'
+    | '/product/$handle'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PrivacyRoute: typeof PrivacyRoute
+  SeminarTermsRoute: typeof SeminarTermsRoute
   SeminarsRoute: typeof SeminarsRoute
   TermsRoute: typeof TermsRoute
   ProductHandleRoute: typeof ProductHandleRoute
@@ -94,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seminar-terms': {
+      id: '/seminar-terms'
+      path: '/seminar-terms'
+      fullPath: '/seminar-terms'
+      preLoaderRoute: typeof SeminarTermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/seminars': {
@@ -123,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PrivacyRoute: PrivacyRoute,
+  SeminarTermsRoute: SeminarTermsRoute,
   SeminarsRoute: SeminarsRoute,
   TermsRoute: TermsRoute,
   ProductHandleRoute: ProductHandleRoute,

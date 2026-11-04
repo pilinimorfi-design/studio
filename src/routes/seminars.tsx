@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { MapPin, Video, Check } from "lucide-react";
 import { seminarsQuery } from "@/lib/queries";
