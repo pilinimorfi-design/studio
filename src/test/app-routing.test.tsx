@@ -30,6 +30,14 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).toBe("/privacy");
   });
+
+  it("matches a page for /seminar-terms instead of falling back to not found", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/seminar-terms");
+
+    expect(matches.at(-1)?.routeId).toBe("/seminar-terms");
+  });
 });
 
 
