@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { MapPin, Video, Check } from "lucide-react";
 import { seminarsQuery } from "@/lib/queries";
@@ -39,6 +39,14 @@ function Seminars() {
           );
         })}
       </div>
+
+      <p className="mt-12 text-sm text-muted-foreground">
+        Πριν δηλώσετε συμμετοχή, δείτε τους{" "}
+        <Link to="/seminar-terms" className="text-foreground underline underline-offset-4 hover:no-underline">
+          Όρους Συμμετοχής Σεμιναρίων
+        </Link>
+        : κανόνες εγγραφής και ακύρωσης.
+      </p>
     </div>
   );
 }

@@ -12,6 +12,9 @@ export function SiteFooter() {
           <Link to="/privacy" className="opacity-75 hover:opacity-100">
             Πολιτική Απορρήτου
           </Link>
+          <Link to="/seminar-terms" className="opacity-75 hover:opacity-100">
+            Όροι Σεμιναρίων
+          </Link>
           <p className="opacity-75">Χειροποίητα κεραμικά · © {new Date().getFullYear()}</p>
         </nav>
 
