@@ -23,6 +23,21 @@ export interface Seminar {
   title: string;
   description: string;
   details: string[];
+  available: boolean;
+}
+export interface ContactContent {
+  phone: string;
+  phoneHref: string;
+  email: string | null;
+}
+export interface SeminarsStatus {
+  available: boolean;
+  notice: string;
+  contact: ContactContent;
+}
+export interface HomeSeminarsCta {
+  title: string;
+  subtitle: string;
 }
 export interface TermsSection {
   id: string;
@@ -78,6 +93,23 @@ const about: AboutContent = {
   image: aboutImage,
 };
 
+const contact: ContactContent = {
+  phone: "698 041 3589",
+  phoneHref: "tel:+306980413589",
+  email: null,
+};
+
+const seminarsStatus: SeminarsStatus = {
+  available: false,
+  notice: "Τα σεμινάρια δεν είναι διαθέσιμα προς το παρόν.",
+  contact,
+};
+
+const homeSeminarsCta: HomeSeminarsCta = {
+  title: "Μάθετε αγγειοπλαστική",
+  subtitle: "Στο εργαστήριο ή από το σπίτι σας, μέσω video.",
+};
+
 const seminars: Seminar[] = [
   {
     id: "in-person",
@@ -85,6 +117,7 @@ const seminars: Seminar[] = [
     title: "Σεμινάρια δια ζώσης",
     description: "Ελάτε στο εργαστήριο και δουλέψτε στον τροχό με καθοδήγηση, σε μικρές ομάδες.",
     details: ["Τροχός & χειροπλαστική", "Υλικά και ψήσιμο περιλαμβάνονται", "Για αρχάριους και προχωρημένους"],
+    available: false,
   },
   {
     id: "online",
@@ -92,6 +125,7 @@ const seminars: Seminar[] = [
     title: "Διαδικτυακά σεμινάρια μέσω video",
     description: "Μάθετε από το σπίτι σας με ζωντανά μαθήματα και βιντεοσκοπημένες ενότητες.",
     details: ["Ζωντανές συνεδρίες μέσω video", "Πρόσβαση στα βίντεο όποτε θέλετε", "Οδηγός υλικών για το σπίτι"],
+    available: false,
   },
 ];
 
@@ -172,7 +206,7 @@ const privacy: PrivacyContent = {
       title: "Υπεύθυνος επεξεργασίας",
       paragraphs: [
         "Υπεύθυνος επεξεργασίας των προσωπικών σας δεδομένων είναι το εργαστήριο κεραμικής «Πήλινη Μορφή».",
-        "Για κάθε θέμα που αφορά τα δεδομένα σας, γράψτε μας στο [email επικοινωνίας].",
+        "Για κάθε θέμα που αφορά τα δεδομένα σας, καλέστε μας στο 698 041 3589 ή γράψτε μας στο [email επικοινωνίας].",
       ],
     },
     {
@@ -224,7 +258,7 @@ const privacy: PrivacyContent = {
       paragraphs: [
         "Μπορείτε να ζητήσετε πρόσβαση στα δεδομένα σας, διόρθωση, διαγραφή, περιορισμό της επεξεργασίας, εναντίωση στην επεξεργασία ή μεταφορά τους σε άλλον.",
         "Αν θεωρείτε ότι δεν ανταποκρινόμαστε σωστά, μπορείτε να απευθυνθείτε στην Αρχή Προστασίας Δεδομένων Προσωπικού Χαρακτήρα.",
-        "Για οποιοδήποτε από αυτά, αρκεί ένα μήνυμα στο [email επικοινωνίας].",
+        "Για οποιοδήποτε από αυτά, αρκεί ένα τηλεφώνημα στο 698 041 3589 ή ένα μήνυμα στο [email επικοινωνίας].",
       ],
     },
   ],
@@ -240,7 +274,7 @@ const seminarTerms: SeminarTermsContent = {
       id: "eggrafi",
       title: "Η εγγραφή",
       paragraphs: [
-        "Η εγγραφή γίνεται με email ή τηλέφωνο. Μας γράφετε το σεμινάριο που σας ενδιαφέρει, την επιθυμητή ημερομηνία και το ονοματεπώνυμό σας.",
+        "Η εγγραφή γίνεται με email ή τηλέφωνο, στο 698 041 3589. Μας γράφετε το σεμινάριο που σας ενδιαφέρει, την επιθυμητή ημερομηνία και το ονοματεπώνυμό σας.",
         "Οι θέσεις είναι περιορισμένες και καλύπτονται με σειρά προτεραιότητας. Αν συμπληρωθούν, μπορείτε να μείνετε σε λίστα αναμονής και να σας καλέσουμε αν ανοίξει θέση.",
         "Η εγγραφή οριστικοποιείται με την πληρωμή της προκαταβολής.",
         "Για τα δια ζώσης σεμινάρια, γράψτε μας αν είστε αρχάριος ή προχωρημένος, ώστε να σας τοποθετήσουμε στην κατάλληλη ομάδα.",
@@ -309,6 +343,15 @@ export const siteContent = {
   },
   async getSeminars(): Promise<Seminar[]> {
     return seminars;
+  },
+  async getSeminarsStatus(): Promise<SeminarsStatus> {
+    return seminarsStatus;
+  },
+  async getContact(): Promise<ContactContent> {
+    return contact;
+  },
+  async getHomeSeminarsCta(): Promise<HomeSeminarsCta> {
+    return homeSeminarsCta;
   },
   async getTerms(): Promise<TermsContent> {
     return terms;
