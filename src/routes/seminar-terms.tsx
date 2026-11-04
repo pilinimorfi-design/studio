@@ -42,7 +42,7 @@ function SeminarTerms() {
         <div className="mt-8 rounded-md border border-dashed bg-secondary p-5">
           <p className="text-sm font-medium text-foreground">{status.notice}</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Οι όροι αυτοί διατηρούνται στην σελίδα για την επόμενη περίοδο εγγραφών. Τηλεφωνικά:{" "}
+            Οι όροι αυτοί διατηρούνται στη σελίδα για την επόμενη περίοδο εγγραφών. Τηλεφωνικά:{" "}
             <a href={status.contact.phoneHref} className="font-medium text-foreground underline underline-offset-4">
               {status.contact.phone}
             </a>
