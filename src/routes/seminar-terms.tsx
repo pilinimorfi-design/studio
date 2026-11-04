@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { seminarTermsQuery } from "@/lib/queries";
+import { seminarTermsQuery, seminarsStatusQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/seminar-terms")({
   head: () => ({
@@ -21,17 +21,36 @@ export const Route = createFileRoute("/seminar-terms")({
     ],
     links: [{ rel: "canonical", href: "/seminar-terms" }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(seminarTermsQuery),
+  loader: ({ context }) =>
+    Promise.all([
+      context.queryClient.ensureQueryData(seminarTermsQuery),
+      context.queryClient.ensureQueryData(seminarsStatusQuery),
+    ]),
   component: SeminarTerms,
 });
 
 function SeminarTerms() {
   const { data: seminarTerms } = useSuspenseQuery(seminarTermsQuery);
+  const { data: status } = useSuspenseQuery(seminarsStatusQuery);
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-16">
       <h1 className="font-display text-4xl md:text-5xl">{seminarTerms.title}</h1>
       <p className="mt-5 leading-relaxed text-muted-foreground">{seminarTerms.intro}</p>
+
+      {!status.available && (
+        <div className="mt-8 rounded-md border border-dashed bg-secondary p-5">
+          <p className="text-sm font-medium text-foreground">{status.notice}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Οι όροι αυτοί διατηρούνται στην σελίδα για την επόμενη περίοδο εγγραφών. Τηλεφωνικά:{" "}
+            <a href={status.contact.phoneHref} className="font-medium text-foreground underline underline-offset-4">
+              {status.contact.phone}
+            </a>
+            .
+          </p>
+        </div>
+      )}
+
 
       <nav aria-label="Περιεχόμενα" className="mt-10 rounded-md border bg-card p-5">
         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Περιεχόμενα</p>

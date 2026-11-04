@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, MapPin, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { homeContentQuery, productsQuery } from "@/lib/queries";
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { data: content } = useSuspenseQuery(homeContentQuery);
-  const { hero, about } = content;
+  const { hero, about, seminarsStatus, seminarsCta } = content;
   const products = useQuery(productsQuery);
   const [category, setCategory] = useState<string>(ALL);
   const [page, setPage] = useState(1);
@@ -127,8 +127,23 @@ function Index() {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 py-20 text-center">
-        <h2 className="font-display text-3xl md:text-4xl">Μάθετε αγγειοπλαστική</h2>
-        <p className="mx-auto mt-4 max-w-lg text-muted-foreground">Στο εργαστήριο ή από το σπίτι σας, μέσω video.</p>
+        <h2 className="font-display text-3xl md:text-4xl">{seminarsCta.title}</h2>
+        <p className="mx-auto mt-4 max-w-lg text-muted-foreground">{seminarsCta.subtitle}</p>
+        {!seminarsStatus.available && (
+          <div className="mx-auto mt-6 max-w-lg rounded-md border border-primary/25 bg-secondary px-5 py-4">
+            <p className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
+              <Clock className="h-4 w-4 text-primary" />
+              {seminarsStatus.notice}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Για ενημέρωση όταν ξεκινήσουν ξανά, καλέστε στο{" "}
+              <a href={seminarsStatus.contact.phoneHref} className="font-medium text-foreground underline underline-offset-4">
+                {seminarsStatus.contact.phone}
+              </a>
+              .
+            </p>
+          </div>
+        )}
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Button asChild size="lg">
             <Link to="/seminars" hash="in-person"><MapPin />Σεμινάρια δια ζώσης</Link>
