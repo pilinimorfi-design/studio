@@ -12,6 +12,9 @@ export function SiteHeader() {
           <Link to="/seminars" className="hidden text-muted-foreground hover:text-foreground sm:inline">
             Σεμινάρια
           </Link>
+          <Link to="/contact" className="text-muted-foreground hover:text-foreground">
+            Επικοινωνία
+          </Link>
           <CartDrawer />
         </nav>
       </div>

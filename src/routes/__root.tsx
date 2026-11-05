@@ -16,6 +16,7 @@ import { useCartSync } from "@/hooks/useCartSync";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Toaster } from "@/components/ui/sonner";
+import { contactQuery } from "@/lib/queries";
 
 function NotFoundComponent() {
   return (
@@ -98,6 +99,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(contactQuery),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
