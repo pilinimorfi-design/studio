@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { homeContentQuery, productsQuery } from "@/lib/queries";
 import { CATEGORIES } from "@/lib/categories";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 
 const ALL = "Όλα";
@@ -68,15 +69,23 @@ function Index() {
         <div className="mb-6 flex items-end justify-between">
           <h2 className="font-display text-3xl md:text-4xl">Τα κεραμικά μας</h2>
         </div>
-        <div className="mb-10 flex flex-wrap gap-2">
-          {[ALL, ...CATEGORIES].map((c) => {
-            const count = c === ALL ? products.data?.length ?? 0 : (products.data ?? []).filter((p) => p.node.productType === c).length;
-            return (
-              <Button key={c} size="sm" variant={category === c ? "default" : "outline"} onClick={() => selectCategory(c)}>
-                {c} <span className="opacity-60">({count})</span>
-              </Button>
-            );
-          })}
+        <div className="mb-10 flex items-center gap-3">
+          <label htmlFor="category" className="text-sm text-muted-foreground">Κατηγορία</label>
+          <Select value={category} onValueChange={selectCategory}>
+            <SelectTrigger id="category" className="w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[ALL, ...CATEGORIES].map((c) => {
+                const count = c === ALL ? products.data?.length ?? 0 : (products.data ?? []).filter((p) => p.node.productType === c).length;
+                return (
+                  <SelectItem key={c} value={c}>
+                    {c} ({count})
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
         {products.isLoading ? (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
