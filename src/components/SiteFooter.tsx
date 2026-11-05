@@ -17,6 +17,9 @@ export function SiteFooter() {
               {contact.phone}
             </a>
           )}
+          <Link to="/contact" className="opacity-75 hover:opacity-100">
+            Επικοινωνία
+          </Link>
           <Link to="/terms" className="opacity-75 hover:opacity-100">
             Όροι Χρήσης
           </Link>
