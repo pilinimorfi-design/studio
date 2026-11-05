@@ -66,16 +66,10 @@ function ContactPage() {
       <h1 className="font-display text-4xl md:text-5xl">Επικοινωνία</h1>
       <p className="mt-4 leading-relaxed text-muted-foreground">
         Για παραγγελίες και ερωτήσεις, συμπληρώστε τη φόρμα και θα σας απαντήσουμε τηλεφωνικά. Αν προτιμάτε, καλέστε
-        μας απευθείας
-        {contact && (
-          <>
-            {" "}
-            στο{" "}
-            <a href={contact.phoneHref} className="font-medium text-foreground underline underline-offset-4">
-              {contact.phone}
-            </a>
-          </>
-        )}
+        μας απευθείας στο{" "}
+        <a href={contact.phoneHref} className="font-medium text-foreground underline underline-offset-4">
+          {contact.phone}
+        </a>
         .
       </p>
 
@@ -150,15 +144,13 @@ function ContactPage() {
         </form>
       )}
 
-      {contact && (
-        <p className="mt-10 flex items-center gap-2 text-sm text-muted-foreground">
-          <Phone className="h-4 w-4 text-primary" />
-          Τηλεφωνικά:{" "}
-          <a href={contact.phoneHref} className="font-medium text-foreground underline underline-offset-4">
-            {contact.phone}
-          </a>
-        </p>
-      )}
+      <p className="mt-10 flex items-center gap-2 text-sm text-muted-foreground">
+        <Phone className="h-4 w-4 text-primary" />
+        Τηλεφωνικά:{" "}
+        <a href={contact.phoneHref} className="font-medium text-foreground underline underline-offset-4">
+          {contact.phone}
+        </a>
+      </p>
     </section>
   );
 }
