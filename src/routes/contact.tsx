@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { CheckCircle2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,13 +18,14 @@ export const Route = createFileRoute("/contact")({
       { property: "og:description", content: "Φόρμα επικοινωνίας για παραγγελίες και ερωτήσεις." },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(contactQuery),
   component: ContactPage,
 });
 
 type FieldErrors = Partial<Record<keyof ContactInput, string>>;
 
 function ContactPage() {
-  const { data: contact } = useQuery(contactQuery);
+  const { data: contact } = useSuspenseQuery(contactQuery);
   const [values, setValues] = useState<ContactInput>({ name: "", phone: "", message: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
