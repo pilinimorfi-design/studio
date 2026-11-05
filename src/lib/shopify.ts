@@ -27,6 +27,9 @@ export interface ShopifyProduct {
       }>;
     };
     options: Array<{ name: string; values: string[] }>;
+    descriptionHtml?: string;
+    dimensions?: { value: string } | null;
+    care?: { value: string } | null;
   };
 }
 
@@ -36,6 +39,9 @@ const PRODUCT_FIELDS = `
   images(first: 5) { edges { node { url(transform: {maxWidth: 1000, maxHeight: 1000, crop: CENTER}) altText } } }
   variants(first: 10) { edges { node { id title sku price { amount currencyCode } availableForSale selectedOptions { name value } } } }
   options { name values }
+  descriptionHtml
+  dimensions: metafield(namespace: "custom", key: "dimensions") { value }
+  care: metafield(namespace: "custom", key: "care") { value }
 `;
 
 export const PRODUCTS_QUERY = `

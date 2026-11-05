@@ -335,7 +335,25 @@ const seminarTerms: SeminarTermsContent = {
 
 
 
+export interface ProductDetailsDefaults {
+  dimensionsFallback: string;
+  care: string[];
+}
+
+const productDetails: ProductDetailsDefaults = {
+  dimensionsFallback: "Για τις ακριβείς διαστάσεις, καλέστε μας στο 698 041 3589.",
+  care: [
+    "Πλύνετε στο χέρι με χλιαρό νερό και ήπιο απορρυπαντικό.",
+    "Αποφύγετε τις απότομες αλλαγές θερμοκρασίας.",
+    "Μη χρησιμοποιείτε σύρμα ή σκληρά σφουγγάρια.",
+    "Κάθε κομμάτι είναι χειροποίητο· μικρές διαφορές στο σχήμα και το χρώμα είναι φυσικές.",
+  ],
+};
+
 export const siteContent = {
+  async getProductDetails(): Promise<ProductDetailsDefaults> {
+    return productDetails;
+  },
   async getHero(): Promise<HeroContent> {
     return hero;
   },
