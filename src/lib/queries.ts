@@ -5,6 +5,10 @@ import { siteContent } from "@/content/site";
 export const productsQuery = queryOptions({ queryKey: ["products"], queryFn: () => fetchProducts(24) });
 export const productQuery = (handle: string) =>
   queryOptions({ queryKey: ["product", handle], queryFn: () => fetchProductByHandle(handle) });
+export const productDetailsQuery = queryOptions({
+  queryKey: ["content", "productDetails"],
+  queryFn: () => siteContent.getProductDetails(),
+});
 export const homeContentQuery = queryOptions({
   queryKey: ["content", "home"],
   queryFn: async () => ({

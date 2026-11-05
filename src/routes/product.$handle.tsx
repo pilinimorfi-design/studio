@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { productQuery } from "@/lib/queries";
+import { productQuery, productDetailsQuery } from "@/lib/queries";
 import { formatPrice } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
 
@@ -27,6 +27,7 @@ function ProductPage() {
   const cartLoading = useCartStore((s) => s.isLoading);
   const [variantIdx, setVariantIdx] = useState(0);
   const [imgIdx, setImgIdx] = useState(0);
+  const { data: details } = useQuery(productDetailsQuery);
 
   if (isLoading) return <div className="flex justify-center py-32"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   if (!product) return <div className="py-32 text-center text-muted-foreground">Το προϊόν δεν βρέθηκε.</div>;
@@ -67,7 +68,14 @@ function ProductPage() {
             {p.productType && <>Κατηγορία: {p.productType}</>}
             {variant?.sku && <> · Κωδικός: {variant.sku}</>}
           </p>
-          <p className="mt-6 whitespace-pre-line leading-relaxed text-muted-foreground">{p.description}</p>
+          <section className="mt-6">
+            <h2 className="font-display text-xl">Περιγραφή</h2>
+            {p.descriptionHtml ? (
+              <div className="mt-2 space-y-3 leading-relaxed text-muted-foreground" dangerouslySetInnerHTML={{ __html: p.descriptionHtml }} />
+            ) : (
+              <p className="mt-2 whitespace-pre-line leading-relaxed text-muted-foreground">{p.description}</p>
+            )}
+          </section>
           {variants.length > 1 && (
             <div className="mt-6 flex flex-wrap gap-2">
               {variants.map((v, i) => (
@@ -82,6 +90,21 @@ function ProductPage() {
               {cartLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Προσθήκη στο καλάθι"}
             </Button>
           )}
+
+          <section className="mt-10 border-t pt-6">
+            <h2 className="font-display text-xl">Διαστάσεις</h2>
+            <p className="mt-2 whitespace-pre-line text-muted-foreground">{p.dimensions?.value || details?.dimensionsFallback}</p>
+          </section>
+          <section className="mt-6 border-t pt-6">
+            <h2 className="font-display text-xl">Οδηγίες φροντίδας</h2>
+            {p.care?.value ? (
+              <p className="mt-2 whitespace-pre-line text-muted-foreground">{p.care.value}</p>
+            ) : (
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+                {details?.care.map((c) => <li key={c}>{c}</li>)}
+              </ul>
+            )}
+          </section>
 
         </div>
       </div>

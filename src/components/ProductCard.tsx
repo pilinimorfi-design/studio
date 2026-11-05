@@ -26,8 +26,8 @@ export function ProductCard({ product }: { product: ShopifyProduct }) {
   };
 
   return (
-    <article className="group flex flex-col">
-      <Link to="/product/$handle" params={{ handle: p.handle }} className="block overflow-hidden rounded-md bg-muted shadow-soft">
+    <article className="group relative flex flex-col">
+      <Link to="/product/$handle" params={{ handle: p.handle }} tabIndex={-1} aria-hidden="true" className="block overflow-hidden rounded-md bg-muted shadow-soft">
         {img ? (
           <img src={img.url} alt={img.altText ?? p.title} loading="lazy" width={1000} height={1000} className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105" />
         ) : (
@@ -36,7 +36,7 @@ export function ProductCard({ product }: { product: ShopifyProduct }) {
       </Link>
       <div className="mt-4 flex flex-1 flex-col">
         <div className="flex items-baseline justify-between gap-3">
-          <Link to="/product/$handle" params={{ handle: p.handle }} className="font-display text-lg leading-snug hover:text-primary">
+          <Link to="/product/$handle" params={{ handle: p.handle }} className="font-display text-lg leading-snug after:absolute after:inset-0 after:content-[''] hover:text-primary">
             {p.title}
           </Link>
           <span className="shrink-0 font-semibold">
@@ -47,12 +47,12 @@ export function ProductCard({ product }: { product: ShopifyProduct }) {
         {variant?.availableForSale === false ? (
           <p className="mt-4 text-sm font-medium text-muted-foreground">Εξαντλήθηκε</p>
         ) : (
-          <Button variant="outline" className="mt-4" onClick={add} disabled={isLoading}>
+          <Button variant="outline" className="relative z-10 mt-4" onClick={add} disabled={isLoading}>
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Προσθήκη στο καλάθι"}
           </Button>
         )}
 
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="relative z-10 mt-2 text-xs text-muted-foreground">
           Δεν δεχόμαστε επιστροφές ·{" "}
           <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
             Όροι Χρήσης
