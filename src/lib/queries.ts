@@ -18,6 +18,7 @@ export const homeContentQuery = queryOptions({
     seminarsCta: await siteContent.getHomeSeminarsCta(),
   }),
 });
+export const aboutQuery = queryOptions({ queryKey: ["content", "about"], queryFn: () => siteContent.getAbout() });
 export const seminarsQuery = queryOptions({ queryKey: ["content", "seminars"], queryFn: () => siteContent.getSeminars() });
 export const seminarsStatusQuery = queryOptions({
   queryKey: ["content", "seminars-status"],
