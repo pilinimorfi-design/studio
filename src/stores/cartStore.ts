@@ -9,6 +9,7 @@ import {
   type GuestCartItem,
 } from "@/lib/cart";
 import type { CatalogProduct } from "@/lib/shopify";
+import { createUuid } from "@/lib/uuid";
 
 interface CartStore {
   cartToken: string | null;
@@ -22,7 +23,7 @@ interface CartStore {
 }
 
 function getOrCreateCartToken(cartToken: string | null) {
-  return cartToken ?? crypto.randomUUID();
+  return cartToken ?? createUuid();
 }
 
 export const useCartStore = create<CartStore>()(
@@ -46,9 +47,10 @@ export const useCartStore = create<CartStore>()(
       },
 
       addItem: async (product) => {
-        const cartToken = getOrCreateCartToken(get().cartToken);
-        set({ cartToken, isLoading: true, error: null });
+        set({ isLoading: true, error: null });
         try {
+          const cartToken = getOrCreateCartToken(get().cartToken);
+          set({ cartToken });
           const items = await addGuestCartItem({
             data: { cartToken, productId: product.id, quantity: 1 },
           });

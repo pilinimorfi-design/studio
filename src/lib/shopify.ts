@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { z } from "zod";
+import { createUuid } from "@/lib/uuid";
 import { supabase } from "@/integrations/supabase/client";
 
 export const SHOPIFY_API_VERSION = "2026-10";
@@ -229,7 +230,7 @@ const updateProductSchema = productInputSchema.extend({
   id: z.string().uuid(),
 });
 
-export const createProductSku = () => `PM-${crypto.randomUUID()}`;
+export const createProductSku = () => `PM-${createUuid()}`;
 
 function productHandle(title: string) {
   const slug = title
@@ -238,7 +239,7 @@ function productHandle(title: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-  return `${slug || "product"}-${crypto.randomUUID().slice(0, 8)}`;
+  return `${slug || "product"}-${createUuid().slice(0, 8)}`;
 }
 
 async function productValues(input: ManagedProductInput) {
