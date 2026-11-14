@@ -24,7 +24,7 @@ describe("Όροι Χρήσης — πλάσιμο, ψήσιμο και διαθ
   it("uses correct Greek for the unavailable-product sentence", async () => {
     const text = await termsText("parangelies");
 
-    expect(text).toContain("Αν κάποιο κομμάτι δεν είναι διαθέσιμο");
+    expect(text).toContain("Αν κάποιο προϊόν δεν είναι διαθέσιμο");
     expect(text).not.toContain("μη είναι διαθέσιμο");
   });
 });

@@ -43,14 +43,16 @@ function SeminarTerms() {
           <p className="text-sm font-medium text-foreground">{status.notice}</p>
           <p className="mt-2 text-sm text-muted-foreground">
             Οι όροι αυτοί διατηρούνται στη σελίδα για την επόμενη περίοδο εγγραφών. Τηλεφωνικά:{" "}
-            <a href={status.contact.phoneHref} className="font-medium text-foreground underline underline-offset-4">
+            <a
+              href={status.contact.phoneHref}
+              className="font-medium text-foreground underline underline-offset-4"
+            >
               {status.contact.phone}
             </a>
             .
           </p>
         </div>
       )}
-
 
       <nav aria-label="Περιεχόμενα" className="mt-10 rounded-md border bg-card p-5">
         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Περιεχόμενα</p>
@@ -69,7 +71,20 @@ function SeminarTerms() {
         {seminarTerms.sections.map((s, i) => (
           <section key={s.id} id={s.id} className="scroll-mt-24">
             <h2 className="font-display text-2xl md:text-3xl">
-              <span className="text-muted-foreground">{i + 1}.</span> {s.title}
+              <span className="text-muted-foreground">{i + 1}.</span>{" "}
+              {s.title.split(/(\s+)/).map((part, partIndex) =>
+                /^\s+$/.test(part) ? (
+                  part
+                ) : s.id === "ulika" && part.startsWith("Υλ") ? (
+                  <span key={partIndex} className="whitespace-nowrap">
+                    Υ<span className="-ml-[0.02em]">λικά,</span>
+                  </span>
+                ) : (
+                  <span key={partIndex} className="whitespace-nowrap">
+                    {part}
+                  </span>
+                ),
+              )}
             </h2>
             {s.paragraphs.map((p, j) => (
               <p key={j} className="mt-4 leading-relaxed text-secondary-foreground/90">
@@ -79,8 +94,6 @@ function SeminarTerms() {
           </section>
         ))}
       </div>
-
-      <p className="mt-14 border-t border-border/60 pt-6 text-sm text-muted-foreground">{seminarTerms.note}</p>
     </div>
   );
 }

@@ -6,33 +6,36 @@ async function ordersText() {
   return terms.sections.find((s) => s.id === "parangelies")?.paragraphs.join(" ") ?? "";
 }
 
-describe("Όροι Χρήσης — λογαριασμός, BoxNow και τηλεφωνικές παραγγελίες", () => {
+describe("Όροι Χρήσης — παραγγελίες, πληρωμές και αποστολές", () => {
   it("lets customers buy without creating an account", async () => {
     const text = await ordersText();
 
     expect(text).toContain("χωρίς να δημιουργήσετε λογαριασμό");
   });
 
-  it("ships orders through BoxNow based on the chosen pickup point", async () => {
+  it("clearly says checkout ordering and payments are not active yet", async () => {
+    const text = await ordersText();
+
+    expect(text).toContain("η καταχώριση και πληρωμή παραγγελιών δεν είναι ενεργές");
+    expect(text).toContain("δεν αποτελούν ολοκληρωμένη παραγγελία");
+  });
+
+  it("describes EveryPay card payment and conditional cash on delivery", async () => {
+    const text = await ordersText();
+
+    expect(text).toContain("EveryPay");
+    expect(text).toContain("αντικαταβολή");
+    expect(text).toContain("μόνο αν εμφανίζεται ρητά στο checkout");
+    expect(text).toContain("Δεν αποθηκεύουμε τον πλήρη αριθμό της κάρτας");
+  });
+
+  it("describes both BoxNow and ACS delivery, including ACS address details", async () => {
     const text = await ordersText();
 
     expect(text).toContain("BoxNow");
-    expect(text).toContain("σημείο παραλαβής");
-  });
-
-  it("sets phone-order shipping by courier choice, weight and volume", async () => {
-    const text = await ordersText();
-
-    expect(text).toContain("τηλεφωνικές παραγγελίες");
-    expect(text).toContain("έξοδα αποστολής");
-    expect(text).toContain("επιλογή της μεταφορικής");
-    expect(text).toContain("βάρος του αντικειμένου");
-    expect(text).toContain("όγκο των αντικειμένων");
-  });
-
-  it("offers free pickup from the workshop", async () => {
-    const text = await ordersText();
-
-    expect(text).toContain("παραλαβή από το εργαστήριο Πήλινη Μορφή είναι δωρεάν");
+    expect(text).toContain("ACS Courier");
+    expect(text).toContain("ταχυδρομικός κώδικας, πόλη/χωριό και νομός");
+    expect(text).toContain("σχόλια παράδοσης");
+    expect(text).toContain("πριν από την τελική υποβολή");
   });
 });

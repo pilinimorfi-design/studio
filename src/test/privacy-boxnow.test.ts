@@ -6,17 +6,27 @@ async function sharingText() {
   return privacy.sections.find((s) => s.id === "koinopoisi")?.paragraphs.join(" ") ?? "";
 }
 
-describe("Πολιτική Απορρήτου — BoxNow", () => {
-  it("names BoxNow as the delivery provider", async () => {
+describe("Πολιτική Απορρήτου — πάροχοι πληρωμής και αποστολής", () => {
+  it("names BoxNow and ACS as delivery providers", async () => {
     const text = await sharingText();
 
     expect(text).toContain("BoxNow");
-    expect(text).toContain("σημείο παραλαβής");
+    expect(text).toContain("ACS");
+    expect(text).toContain("locker που επιλέξατε");
   });
 
-  it("no longer speaks of an unnamed courier or locker provider", async () => {
+  it("describes EveryPay card processing and does not share card details with the store", async () => {
     const text = await sharingText();
 
-    expect(text).not.toContain("εταιρεία ταχυμεταφορών ή τον πάροχο locker");
+    expect(text).toContain("EveryPay");
+    expect(text).toContain("απευθείας");
+    expect(text).toContain("στοιχεία κάρτας");
+  });
+
+  it("says delivery information is shared only with the selected carrier", async () => {
+    const text = await sharingText();
+
+    expect(text).toContain("μόνο για την παράδοση");
+    expect(text).toContain("που επιλέξατε");
   });
 });

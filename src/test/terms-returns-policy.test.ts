@@ -26,13 +26,13 @@ describe("Όροι Χρήσης — επιστροφές", () => {
     const { text } = await returnsSection();
 
     expect(text).toContain("φωτογραφία");
-    expect(text).toContain("2 μέρες");
+    expect(text).toContain("2 ημέρες");
     expect(text).toContain("παραλαβή");
   });
 
   it("charges the shipping costs to the buyer", async () => {
     const { text } = await returnsSection();
 
-    expect(text).toContain("Τα μεταφορικά τα χρεώνεται ο αγοραστής");
+    expect(text).toContain("Τα μεταφορικά επιβαρύνουν τον αγοραστή");
   });
 });

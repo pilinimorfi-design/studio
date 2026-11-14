@@ -14,7 +14,8 @@ export const Route = createFileRoute("/privacy")({
       { property: "og:title", content: "Πολιτική Απορρήτου — Πήλινη Μορφή" },
       {
         property: "og:description",
-        content: "Ποια δεδομένα συλλέγουμε, γιατί τα χρειάζεται η παραγγελία σας και ποια δικαιώματα έχετε.",
+        content:
+          "Ποια δεδομένα συλλέγουμε, γιατί τα χρειάζεται η παραγγελία σας και ποια δικαιώματα έχετε.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "/privacy" },
@@ -60,8 +61,6 @@ function Privacy() {
           </section>
         ))}
       </div>
-
-      <p className="mt-14 border-t border-border/60 pt-6 text-sm text-muted-foreground">{privacy.note}</p>
     </div>
   );
 }

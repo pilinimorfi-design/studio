@@ -38,6 +38,28 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).toBe("/seminar-terms");
   });
+
+  it("matches the product management page", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/admin/products");
+
+    expect(matches.at(-1)?.routeId).toBe("/admin/products");
+  });
+
+  it("matches the checkout page", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/checkout");
+
+    expect(matches.at(-1)?.routeId).toBe("/checkout");
+  });
+
+  it("matches the order confirmation page", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/order-confirmation");
+
+    expect(matches.at(-1)?.routeId).toBe("/order-confirmation");
+  });
 });
-
-

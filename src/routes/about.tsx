@@ -6,9 +6,15 @@ export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
       { title: "Σχετικά με εμάς — Πήλινη Μορφή" },
-      { name: "description", content: "Η πορεία, το πάθος και η φιλοσοφία του εργαστηρίου αγγειοπλαστικής Πήλινη Μορφή." },
+      {
+        name: "description",
+        content: "Η πορεία, το πάθος και η φιλοσοφία του εργαστηρίου αγγειοπλαστικής Πήλινη Μορφή.",
+      },
       { property: "og:title", content: "Σχετικά με εμάς — Πήλινη Μορφή" },
-      { property: "og:description", content: "Η πορεία και η φιλοσοφία του εργαστηρίου Πήλινη Μορφή." },
+      {
+        property: "og:description",
+        content: "Η πορεία και η φιλοσοφία του εργαστηρίου Πήλινη Μορφή.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -22,12 +28,32 @@ function AboutPage() {
   return (
     <section className="bg-secondary">
       <div className="mx-auto grid max-w-6xl items-start gap-10 px-5 py-16 md:grid-cols-2 md:py-20">
-        <img src={about.image} alt="Χέρια που πλάθουν πηλό στον τροχό" width={1008} height={1200} className="aspect-[4/5] w-full rounded-md object-cover shadow-soft" />
+        <img
+          src={about.image}
+          alt="Χέρια που πλάθουν πηλό στον τροχό"
+          width={1008}
+          height={1200}
+          className="aspect-[4/5] w-full rounded-md object-cover shadow-soft"
+        />
         <div>
           <h1 className="font-display text-4xl md:text-5xl">{about.title}</h1>
           {about.paragraphs.map((t, i) => (
-            <p key={i} className="mt-5 leading-relaxed text-secondary-foreground/85">{t}</p>
+            <p key={i} className="mt-5 leading-relaxed text-secondary-foreground/85">
+              {t}
+            </p>
           ))}
+          <p className="mt-8 border-t border-border pt-5 leading-relaxed text-secondary-foreground/85">
+            Ευχαριστούμε το{" "}
+            <a
+              href={about.sponsor.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+            >
+              {about.sponsor.name}
+            </a>{" "}
+            για την ευγενή χορηγία στα πρώτα μας βήματα.
+          </p>
         </div>
       </div>
     </section>

@@ -14,7 +14,8 @@ export const Route = createFileRoute("/terms")({
       { property: "og:title", content: "Όροι Χρήσης — Πήλινη Μορφή" },
       {
         property: "og:description",
-        content: "Το εργαστήριο, τα προϊόντα, οι παραγγελίες, τα πνευματικά δικαιώματα και ο περιορισμός ευθύνης.",
+        content:
+          "Το εργαστήριο, τα προϊόντα, οι παραγγελίες, τα πνευματικά δικαιώματα και ο περιορισμός ευθύνης.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "/terms" },
@@ -60,8 +61,6 @@ function Terms() {
           </section>
         ))}
       </div>
-
-      <p className="mt-14 border-t border-border/60 pt-6 text-sm text-muted-foreground">{terms.note}</p>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Phone } from "lucide-react";
 import { contactQuery } from "@/lib/queries";
+import logo from "@/assets/logo-pilinimorfi.png";
 
 export function SiteFooter() {
   const { data: contact } = useSuspenseQuery(contactQuery);
@@ -9,9 +10,15 @@ export function SiteFooter() {
   return (
     <footer className="bg-clay-deep text-clay-deep-foreground">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-10 sm:flex-row sm:items-center sm:justify-between">
-        <p className="font-display text-lg">Πήλινη Μορφή</p>
+        <p className="flex items-center gap-2 font-display text-lg">
+          <img src={logo} alt="" aria-hidden="true" className="size-10 object-contain" />
+          <span>Πήλινη Μορφή</span>
+        </p>
         <nav className="flex flex-wrap items-center gap-5 text-sm">
-          <a href={contact.phoneHref} className="flex items-center gap-1.5 opacity-75 hover:opacity-100">
+          <a
+            href={contact.phoneHref}
+            className="flex items-center gap-1.5 opacity-75 hover:opacity-100"
+          >
             <Phone className="h-3.5 w-3.5" />
             {contact.phone}
           </a>

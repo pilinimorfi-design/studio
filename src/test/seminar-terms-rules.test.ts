@@ -37,14 +37,14 @@ describe("Όροι Συμμετοχής Σεμιναρίων — ακύρωση"
   it("refunds the deposit in full when cancelling at least 7 days before", async () => {
     const text = await sectionText("akysi-esas");
 
-    expect(text).toContain("τουλάχιστον 7 μέρες πριν");
+    expect(text).toContain("τουλάχιστον 7 ημέρες πριν από το σεμινάριο");
     expect(text).toContain("επιστρέφεται πλήρως");
   });
 
   it("moves the deposit to another seminar between 7 days and 48 hours", async () => {
     const text = await sectionText("akysi-esas");
 
-    expect(text).toContain("από 7 έως 48 ώρες");
+    expect(text).toContain("από 7 ημέρες έως 48 ώρες");
     expect(text).toContain("μεταφέρετε σε επόμενο σεμινάριο");
   });
 

@@ -1,64 +1,75 @@
 import { Link } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ProductAttributes } from "@/components/ProductAttributes";
 import { useCartStore } from "@/stores/cartStore";
-import { formatPrice, type ShopifyProduct } from "@/lib/shopify";
 
-export function ProductCard({ product }: { product: ShopifyProduct }) {
-  const addItem = useCartStore((s) => s.addItem);
-  const isLoading = useCartStore((s) => s.isLoading);
-  const p = product.node;
-  const variant = p.variants.edges[0]?.node;
-  const img = p.images.edges[0]?.node;
+import { formatPrice, type CatalogProduct } from "@/lib/shopify";
 
-  const add = async () => {
-    if (!variant) return;
-    await addItem({
-      product,
-      variantId: variant.id,
-      variantTitle: variant.title,
-      price: variant.price,
-      quantity: 1,
-      selectedOptions: variant.selectedOptions,
-    });
-    toast.success("Προστέθηκε στο καλάθι", { description: p.title });
-  };
+export function ProductCard({ product }: { product: CatalogProduct }) {
+  const image = product.imageUrl;
+  const addItem = useCartStore((state) => state.addItem);
+  const isLoading = useCartStore((state) => state.isLoading);
+
+  async function addToCart() {
+    try {
+      await addItem(product);
+      toast.success("Προστέθηκε στο καλάθι", { description: product.title });
+    } catch {
+      toast.error("Δεν ήταν δυνατή η προσθήκη στο καλάθι.");
+    }
+  }
 
   return (
     <article className="group relative flex flex-col">
-      <Link to="/product/$handle" params={{ handle: p.handle }} tabIndex={-1} aria-hidden="true" className="block overflow-hidden rounded-md bg-muted shadow-soft">
-        {img ? (
-          <img src={img.url} alt={img.altText ?? p.title} loading="lazy" width={1000} height={1000} className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+      <Link
+        to="/product/$handle"
+        params={{ handle: product.handle }}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="block overflow-hidden rounded-md bg-muted shadow-soft"
+      >
+        {image ? (
+          <img
+            src={image}
+            alt={product.title}
+            loading="lazy"
+            width={1000}
+            height={1000}
+            className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
         ) : (
           <div className="aspect-square w-full" />
         )}
       </Link>
       <div className="mt-4 flex flex-1 flex-col">
         <div className="flex items-baseline justify-between gap-3">
-          <Link to="/product/$handle" params={{ handle: p.handle }} className="font-display text-lg leading-snug after:absolute after:inset-0 after:content-[''] hover:text-primary">
-            {p.title}
+          <Link
+            to="/product/$handle"
+            params={{ handle: product.handle }}
+            className="font-display text-lg leading-snug after:absolute after:inset-0 after:content-[''] hover:text-primary"
+          >
+            {product.title}
           </Link>
           <span className="shrink-0 font-semibold">
-            {formatPrice(p.priceRange.minVariantPrice.amount, p.priceRange.minVariantPrice.currencyCode)}
+            {formatPrice(product.price.amount, product.price.currencyCode)}
           </span>
         </div>
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{p.description}</p>
-        {variant?.availableForSale === false ? (
-          <p className="mt-4 text-sm font-medium text-muted-foreground">Εξαντλήθηκε</p>
-        ) : (
-          <Button variant="outline" className="relative z-10 mt-4" onClick={add} disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Προσθήκη στο καλάθι"}
-          </Button>
+        {product.productType && (
+          <p className="mt-1 text-sm text-muted-foreground">{product.productType}</p>
         )}
-
-        <p className="relative z-10 mt-2 text-xs text-muted-foreground">
-          Δεν δεχόμαστε επιστροφές ·{" "}
-          <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
-            Όροι Χρήσης
-          </Link>
-        </p>
-
+        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
+        <div className="mt-2">
+          <ProductAttributes product={product} compact />
+        </div>
+        <Button
+          variant="outline"
+          className="relative z-10 mt-4"
+          onClick={() => void addToCart()}
+          disabled={isLoading}
+        >
+          Προσθήκη στο καλάθι
+        </Button>
       </div>
     </article>
   );

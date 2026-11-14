@@ -1,132 +1,108 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import {
-  type ShopifyProduct,
-  createShopifyCart,
-  addLineToShopifyCart,
-  updateShopifyCartLine,
-  removeLineFromShopifyCart,
-  fetchCart,
-} from "@/lib/shopify";
+import { createJSONStorage, persist } from "zustand/middleware";
 
-export interface CartItem {
-  lineId: string | null;
-  product: ShopifyProduct;
-  variantId: string;
-  variantTitle: string;
-  price: { amount: string; currencyCode: string };
-  quantity: number;
-  selectedOptions: Array<{ name: string; value: string }>;
-}
+import {
+  addGuestCartItem,
+  getGuestCart,
+  removeGuestCartItem,
+  updateGuestCartItem,
+  type GuestCartItem,
+} from "@/lib/cart";
+import type { CatalogProduct } from "@/lib/shopify";
 
 interface CartStore {
-  items: CartItem[];
-  cartId: string | null;
-  checkoutUrl: string | null;
+  cartToken: string | null;
+  items: GuestCartItem[];
   isLoading: boolean;
-  isSyncing: boolean;
-  addItem: (item: Omit<CartItem, "lineId">) => Promise<void>;
-  updateQuantity: (variantId: string, quantity: number) => Promise<void>;
-  removeItem: (variantId: string) => Promise<void>;
-  clearCart: () => void;
-  syncCart: () => Promise<void>;
-  getCheckoutUrl: () => string | null;
+  error: string | null;
+  loadCart: () => Promise<void>;
+  addItem: (product: CatalogProduct) => Promise<void>;
+  updateQuantity: (productId: string, quantity: number) => Promise<void>;
+  removeItem: (productId: string) => Promise<void>;
+}
+
+function getOrCreateCartToken(cartToken: string | null) {
+  return cartToken ?? crypto.randomUUID();
 }
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
+      cartToken: null,
       items: [],
-      cartId: null,
-      checkoutUrl: null,
       isLoading: false,
-      isSyncing: false,
+      error: null,
 
-      addItem: async (item) => {
-        const { items, cartId, clearCart } = get();
-        const existing = items.find((i) => i.variantId === item.variantId);
-        set({ isLoading: true });
+      loadCart: async () => {
+        const { cartToken } = get();
+        if (!cartToken) return;
         try {
-          if (!cartId) {
-            const r = await createShopifyCart(item.variantId, item.quantity);
-            if (r) set({ cartId: r.cartId, checkoutUrl: r.checkoutUrl, items: [{ ...item, lineId: r.lineId }] });
-          } else if (existing) {
-            if (!existing.lineId) return;
-            const qty = existing.quantity + item.quantity;
-            const r = await updateShopifyCartLine(cartId, existing.lineId, qty);
-            if (r.success) set({ items: get().items.map((i) => (i.variantId === item.variantId ? { ...i, quantity: qty } : i)) });
-            else if (r.cartNotFound) clearCart();
-          } else {
-            const r = await addLineToShopifyCart(cartId, item.variantId, item.quantity);
-            if (r.success) set({ items: [...get().items, { ...item, lineId: r.lineId ?? null }] });
-            else if (r.cartNotFound) clearCart();
-          }
-        } catch (e) {
-          console.error("Failed to add item:", e);
+          const items = await getGuestCart({ data: { cartToken } });
+          set({ items, error: null });
+        } catch (error) {
+          console.error("Failed to load cart:", error);
+          set({ error: "Δεν ήταν δυνατή η φόρτωση του καλαθιού." });
+        }
+      },
+
+      addItem: async (product) => {
+        const cartToken = getOrCreateCartToken(get().cartToken);
+        set({ cartToken, isLoading: true, error: null });
+        try {
+          const items = await addGuestCartItem({
+            data: { cartToken, productId: product.id, quantity: 1 },
+          });
+          set({ items });
+        } catch (error) {
+          console.error("Failed to add cart item:", error);
+          set({ error: "Δεν ήταν δυνατή η προσθήκη του προϊόντος στο καλάθι." });
+          throw error;
         } finally {
           set({ isLoading: false });
         }
       },
 
-      updateQuantity: async (variantId, quantity) => {
-        if (quantity <= 0) return get().removeItem(variantId);
-        const { items, cartId, clearCart } = get();
-        const item = items.find((i) => i.variantId === variantId);
-        if (!item?.lineId || !cartId) return;
-        set({ isLoading: true });
+      updateQuantity: async (productId, quantity) => {
+        const { cartToken } = get();
+        if (!cartToken) return;
+        if (quantity <= 0) return get().removeItem(productId);
+        set({ isLoading: true, error: null });
         try {
-          const r = await updateShopifyCartLine(cartId, item.lineId, quantity);
-          if (r.success) set({ items: get().items.map((i) => (i.variantId === variantId ? { ...i, quantity } : i)) });
-          else if (r.cartNotFound) clearCart();
-        } catch (e) {
-          console.error("Failed to update quantity:", e);
+          const items = await updateGuestCartItem({
+            data: { cartToken, productId, quantity },
+          });
+          set({ items });
+        } catch (error) {
+          console.error("Failed to update cart item:", error);
+          set({ error: "Δεν ήταν δυνατή η ενημέρωση της ποσότητας." });
+          throw error;
         } finally {
           set({ isLoading: false });
         }
       },
 
-      removeItem: async (variantId) => {
-        const { items, cartId, clearCart } = get();
-        const item = items.find((i) => i.variantId === variantId);
-        if (!item?.lineId || !cartId) return;
-        set({ isLoading: true });
+      removeItem: async (productId) => {
+        const { cartToken } = get();
+        if (!cartToken) return;
+        set({ isLoading: true, error: null });
         try {
-          const r = await removeLineFromShopifyCart(cartId, item.lineId);
-          if (r.success) {
-            const next = get().items.filter((i) => i.variantId !== variantId);
-            if (next.length === 0) clearCart();
-            else set({ items: next });
-          } else if (r.cartNotFound) clearCart();
-        } catch (e) {
-          console.error("Failed to remove item:", e);
+          const items = await removeGuestCartItem({
+            data: { cartToken, productId },
+          });
+          set({ items });
+        } catch (error) {
+          console.error("Failed to remove cart item:", error);
+          set({ error: "Δεν ήταν δυνατή η αφαίρεση του προϊόντος." });
+          throw error;
         } finally {
           set({ isLoading: false });
-        }
-      },
-
-      clearCart: () => set({ items: [], cartId: null, checkoutUrl: null }),
-      getCheckoutUrl: () => get().checkoutUrl,
-
-      syncCart: async () => {
-        const { cartId, isSyncing, clearCart } = get();
-        if (!cartId || isSyncing) return;
-        set({ isSyncing: true });
-        try {
-          const data = await fetchCart(cartId);
-          if (!data) return;
-          const cart = data?.data?.cart;
-          if (!cart || cart.totalQuantity === 0) clearCart();
-        } catch (e) {
-          console.error("Failed to sync cart:", e);
-        } finally {
-          set({ isSyncing: false });
         }
       },
     }),
     {
-      name: "shopify-cart",
+      name: "guest-cart",
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ items: s.items, cartId: s.cartId, checkoutUrl: s.checkoutUrl }),
+      partialize: (state) => ({ cartToken: state.cartToken, items: [] }),
     },
   ),
 );

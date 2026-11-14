@@ -2,13 +2,13 @@ import { useEffect } from "react";
 import { useCartStore } from "@/stores/cartStore";
 
 export function useCartSync() {
-  const syncCart = useCartStore((s) => s.syncCart);
+  const loadCart = useCartStore((s) => s.loadCart);
   useEffect(() => {
-    syncCart();
+    loadCart();
     const onVis = () => {
-      if (document.visibilityState === "visible") syncCart();
+      if (document.visibilityState === "visible") loadCart();
     };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
-  }, [syncCart]);
+  }, [loadCart]);
 }
