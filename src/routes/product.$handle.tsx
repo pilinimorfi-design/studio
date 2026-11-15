@@ -9,17 +9,28 @@ import { formatPrice } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
 
 export const Route = createFileRoute("/product/$handle")({
-  head: () => ({
-    meta: [
-      { title: "Προϊόν — Πήλινη Μορφή" },
-      { name: "description", content: "Χειροποίητο κεραμικό από το εργαστήριο Πήλινη Μορφή." },
-      { property: "og:title", content: "Προϊόν — Πήλινη Μορφή" },
-      {
-        property: "og:description",
-        content: "Χειροποίητο κεραμικό από το εργαστήριο Πήλινη Μορφή.",
-      },
-    ],
-  }),
+  loader: ({ context, params }) => context.queryClient.ensureQueryData(productQuery(params.handle)),
+  head: ({ loaderData }) => {
+    const title = loaderData?.title
+      ? `${loaderData.title} | Πήλινη Μορφή`
+      : "Προϊόν — Πήλινη Μορφή";
+    const descriptionText = loaderData
+      ? `${loaderData.title}${loaderData.productType ? ` — ${loaderData.productType}.` : "."} ${loaderData.description}`
+      : "Χειροποίητο κεραμικό από το εργαστήριο Πήλινη Μορφή.";
+    const description =
+      descriptionText.length > 160
+        ? `${descriptionText.slice(0, 157).trimEnd()}...`
+        : descriptionText;
+
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+      ],
+    };
+  },
   component: ProductPage,
 });
 

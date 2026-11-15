@@ -232,14 +232,48 @@ const updateProductSchema = productInputSchema.extend({
 
 export const createProductSku = () => `PM-${createUuid()}`;
 
-function productHandle(title: string) {
-  const slug = title
+const greekTransliteration: Record<string, string> = {
+  α: "a",
+  β: "v",
+  γ: "g",
+  δ: "d",
+  ε: "e",
+  ζ: "z",
+  η: "i",
+  θ: "th",
+  ι: "i",
+  κ: "k",
+  λ: "l",
+  μ: "m",
+  ν: "n",
+  ξ: "x",
+  ο: "o",
+  π: "p",
+  ρ: "r",
+  σ: "s",
+  ς: "s",
+  τ: "t",
+  υ: "y",
+  φ: "f",
+  χ: "ch",
+  ψ: "ps",
+  ω: "o",
+};
+
+function slugify(value: string) {
+  return value
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
+    .replace(/[α-ως]/g, (character) => greekTransliteration[character] ?? character)
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-  return `${slug || "product"}-${createUuid().slice(0, 8)}`;
+}
+
+export function createProductHandle(categoryName: string, title: string, sku: string) {
+  const descriptiveSlug = slugify(`${categoryName} ${title}`).slice(0, 120).replace(/-+$/g, "");
+  const uniqueSkuSlug = slugify(sku);
+  return `${descriptiveSlug || "product"}-${uniqueSkuSlug}`;
 }
 
 async function productValues(input: ManagedProductInput) {
@@ -274,12 +308,13 @@ export const createManagedProduct = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await verifyProductAdminPassword(data.adminPassword);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const values = await productValues(data);
     const { data: row, error } = await supabaseAdmin
       .from("products")
       .insert({
-        ...(await productValues(data)),
+        ...values,
         sku: data.sku,
-        handle: productHandle(data.title),
+        handle: createProductHandle(values.product_type, data.title, data.sku),
       })
       .select(PRODUCT_SELECT)
       .single();
