@@ -100,7 +100,7 @@ function ProductPage() {
             <Button size="lg" onClick={() => void addToCart()} disabled={cartLoading}>
               Προσθήκη στο καλάθι
             </Button>
-            <Button size="lg" onClick={() => void buyNow()} disabled={cartLoading}>
+            <Button size="lg" className="h-9" onClick={() => void buyNow()} disabled={cartLoading}>
               Αγορά Τώρα
             </Button>
           </div>

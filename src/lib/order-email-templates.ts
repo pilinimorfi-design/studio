@@ -96,6 +96,25 @@ export function createBoxNowLockerEmail({
   ]);
 }
 
+export function createBoxNowReadyEmail({
+  orderNumber,
+  locker,
+}: BoxNowLockerInput): OrderEmailTemplate {
+  const lockerDetails = [
+    `Θυρίδα: ${locker.name}`,
+    `Κωδικός θυρίδας: ${locker.id}`,
+    ...(locker.addressLine ? [`Διεύθυνση: ${locker.addressLine}`] : []),
+    ...(locker.postalCode ? [`Ταχυδρομικός κώδικας: ${locker.postalCode}`] : []),
+  ].join("\n");
+
+  return renderEmail(`Το δέμα σας είναι έτοιμο για παραλαβή — #${orderNumber}`, [
+    `Η παραγγελία #${orderNumber} είναι έτοιμη για παραλαβή από τη θυρίδα BoxNow.`,
+    lockerDetails,
+    "Για τον κωδικό ανοίγματος και την προθεσμία παραλαβής, ακολουθήστε την επίσημη ειδοποίηση της BoxNow. Το παρόν είναι προεπισκόπηση δοκιμής και δεν περιλαμβάνει πραγματικό κωδικό παραλαβής.",
+    "Με εκτίμηση,\nΠήλινη Μορφή",
+  ]);
+}
+
 export function createCourierDispatchEmail({
   customerName,
   orderNumber,

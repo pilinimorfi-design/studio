@@ -8,7 +8,7 @@ describe("simulated payment redirect URLs", () => {
 
     expect(urls).toEqual({
       paymentUrl: "/mock-payment?orderId=test-order-123",
-      successUrl: "/order-confirmation?orderId=test-order-123&simulation=success",
+      successUrl: "/mock-order-journey?orderId=test-order-123",
       cancelUrl: "/order-confirmation?orderId=test-order-123&simulation=failure",
     });
   });

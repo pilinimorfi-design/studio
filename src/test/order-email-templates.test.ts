@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createBoxNowLockerEmail,
+  createBoxNowReadyEmail,
   createCourierDispatchEmail,
   createPurchaseConfirmationEmail,
 } from "@/lib/order-email-templates";
@@ -56,6 +57,23 @@ describe("order email templates", () => {
     expect(email.text).toContain("ACS Courier");
     expect(email.text).toContain("Τελικός κωδικός αποστολής: ACS-987654");
     expect(email.html).toContain("https://example.com/track/ACS-987654");
+  });
+
+  it("previews the BoxNow ready-for-pickup notification without a fake pickup code", () => {
+    const email = createBoxNowReadyEmail({
+      orderNumber: 1042,
+      locker: {
+        name: "Σύνταγμα",
+        id: "BN-123",
+        addressLine: "Πλατεία Συντάγματος 1",
+        postalCode: "10563",
+      },
+    });
+
+    expect(email.subject).toContain("έτοιμο για παραλαβή");
+    expect(email.text).toContain("Θυρίδα: Σύνταγμα");
+    expect(email.text).toContain("δεν περιλαμβάνει πραγματικό κωδικό παραλαβής");
+    expect(email.text).not.toContain("Γεια σας");
   });
 
   it("escapes untrusted values in HTML", () => {

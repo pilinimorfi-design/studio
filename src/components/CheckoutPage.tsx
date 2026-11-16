@@ -54,22 +54,63 @@ export function CheckoutPage() {
     }
 
     const formData = new FormData(event.currentTarget);
+    const customerName = String(formData.get("customerName") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const phone = String(formData.get("phone") ?? "").trim();
+    const shippingAddress = String(formData.get("shippingAddress") ?? "").trim();
+    const shippingNotes = String(formData.get("shippingNotes") ?? "").trim();
+    const shippingCity = city.trim();
+    const shippingCounty = county.trim();
+
+    if (customerName.length < 2 || customerName.length > 150) {
+      setSubmitError("Το ονοματεπώνυμο πρέπει να έχει 2 έως 150 χαρακτήρες.");
+      return;
+    }
+    if (!email || email.length > 254) {
+      setSubmitError("Συμπληρώστε έγκυρη διεύθυνση email έως 254 χαρακτήρες.");
+      return;
+    }
+    if (phone.length < 7 || phone.length > 32) {
+      setSubmitError("Το τηλέφωνο πρέπει να έχει 7 έως 32 χαρακτήρες.");
+      return;
+    }
+    if (shippingMethod === "acs") {
+      if (shippingAddress.length < 3 || shippingAddress.length > 300) {
+        setSubmitError("Η διεύθυνση ACS πρέπει να έχει 3 έως 300 χαρακτήρες.");
+        return;
+      }
+      if (!/^\d{5}$/.test(postalCode)) {
+        setSubmitError("Ο ταχυδρομικός κώδικας ACS πρέπει να αποτελείται από 5 ψηφία.");
+        return;
+      }
+      if (shippingCity.length < 2 || shippingCity.length > 150) {
+        setSubmitError("Η πόλη ACS πρέπει να έχει 2 έως 150 χαρακτήρες.");
+        return;
+      }
+    }
+    if (shippingCounty.length > 150 || shippingNotes.length > 1000) {
+      setSubmitError("Ελέγξτε το μήκος του νομού ή των σχολίων παράδοσης.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const checkout = await createSimulatedOrder({
         data: {
           cartToken,
-          customerName: String(formData.get("customerName") ?? ""),
-          email: String(formData.get("email") ?? ""),
-          phone: String(formData.get("phone") ?? ""),
+          customerName,
+          email,
+          phone,
           shippingMethod,
           lockerId: selectedLocker?.id ?? "",
           lockerName: selectedLocker?.name ?? "",
-          shippingAddress: String(formData.get("shippingAddress") ?? ""),
+          lockerAddressLine: selectedLocker?.addressLine ?? "",
+          lockerPostalCode: selectedLocker?.postalCode ?? "",
+          shippingAddress,
           shippingPostalCode: postalCode,
-          shippingCity: city,
-          shippingCounty: county,
-          shippingNotes: String(formData.get("shippingNotes") ?? ""),
+          shippingCity,
+          shippingCounty,
+          shippingNotes,
         },
       });
       clearLocalCart();
@@ -231,8 +272,7 @@ export function CheckoutPage() {
                   <span>
                     <span className="block font-medium">BoxNow Locker</span>
                     <span className="mt-1 block text-sm text-muted-foreground">
-                      Παραλαβή από locker. Η επιλογή συγκεκριμένου locker θα προστεθεί με το επίσημο
-                      widget της BoxNow.
+                      Παραλαβή από locker που επιλέγετε στον χάρτη BoxNow.
                     </span>
                   </span>
                 </label>

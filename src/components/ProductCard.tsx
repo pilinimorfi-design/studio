@@ -82,8 +82,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         </Button>
         <Button
           variant="outline"
-          size="sm"
-          className="relative z-10 mt-1"
+          className="relative z-10 mt-1 h-8"
           onClick={() => void buyNow()}
           disabled={isLoading}
         >

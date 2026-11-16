@@ -1,18 +1,20 @@
 ALTER TABLE public.orders
-  ADD COLUMN is_test BOOLEAN NOT NULL DEFAULT FALSE,
-  ADD COLUMN shipping_method TEXT,
-  ADD COLUMN shipping_address TEXT,
-  ADD COLUMN shipping_postal_code TEXT,
-  ADD COLUMN shipping_city TEXT,
-  ADD COLUMN shipping_county TEXT,
-  ADD COLUMN shipping_notes TEXT;
+  ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS shipping_method TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_address TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_postal_code TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_city TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_county TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_notes TEXT;
 
 ALTER TABLE public.orders
-  DROP CONSTRAINT orders_payment_provider_check,
+  DROP CONSTRAINT IF EXISTS orders_payment_provider_check;
+
+ALTER TABLE public.orders
   ADD CONSTRAINT orders_payment_provider_check
     CHECK (payment_provider IN ('easypay', 'simulation'));
 
-CREATE FUNCTION public.create_simulated_guest_order(
+CREATE OR REPLACE FUNCTION public.create_simulated_guest_order(
   p_cart_token_hash TEXT,
   p_customer_name TEXT,
   p_email TEXT,

@@ -159,8 +159,10 @@ export type Database = {
       orders: {
         Row: {
           boxnow_label_url: string | null;
+          boxnow_locker_address: string | null;
           boxnow_locker_id: string;
           boxnow_locker_name: string;
+          boxnow_locker_postal_code: string | null;
           boxnow_shipment_id: string | null;
           boxnow_tracking_number: string | null;
           created_at: string;
@@ -189,8 +191,10 @@ export type Database = {
         };
         Insert: {
           boxnow_label_url?: string | null;
+          boxnow_locker_address?: string | null;
           boxnow_locker_id: string;
           boxnow_locker_name: string;
+          boxnow_locker_postal_code?: string | null;
           boxnow_shipment_id?: string | null;
           boxnow_tracking_number?: string | null;
           created_at?: string;
@@ -219,8 +223,10 @@ export type Database = {
         };
         Update: {
           boxnow_label_url?: string | null;
+          boxnow_locker_address?: string | null;
           boxnow_locker_id?: string;
           boxnow_locker_name?: string;
+          boxnow_locker_postal_code?: string | null;
           boxnow_shipment_id?: string | null;
           boxnow_tracking_number?: string | null;
           created_at?: string;
@@ -361,6 +367,25 @@ export type Database = {
           p_shipping_city: string;
           p_shipping_county: string;
           p_shipping_notes: string;
+        };
+        Returns: string;
+      };
+      create_simulated_guest_order_with_locker: {
+        Args: {
+          p_cart_token_hash: string;
+          p_customer_name: string;
+          p_email: string;
+          p_phone: string;
+          p_shipping_method: string;
+          p_locker_id: string;
+          p_locker_name: string;
+          p_shipping_address: string;
+          p_shipping_postal_code: string;
+          p_shipping_city: string;
+          p_shipping_county: string;
+          p_shipping_notes: string;
+          p_locker_address: string;
+          p_locker_postal_code: string;
         };
         Returns: string;
       };
