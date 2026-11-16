@@ -63,7 +63,7 @@ describe("Checkout options", () => {
     expect(screen.getByRole("button", { name: /Επιλογή BoxNow Locker/ })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /ACS Courier/ })).toBeInTheDocument();
     expect(screen.queryByLabelText("Οδός και αριθμός")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Τηλέφωνο επικοινωνίας")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Τηλέφωνο επικοινωνίας")).toBeRequired();
     expect(postalCodeLookupMock).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("radio", { name: /ACS Courier/ }));
@@ -92,7 +92,7 @@ describe("Checkout options", () => {
     expect(screen.getByLabelText("Πόλη/Χωριό")).toBeRequired();
     expect(screen.getByRole("radio", { name: /Αντικαταβολή/ })).toBeChecked();
     expect(
-      screen.getByRole("button", { name: /Η ολοκλήρωση παραγγελίας δεν είναι ακόμη διαθέσιμη/ }),
+      screen.getByRole("button", { name: /Η αντικαταβολή δεν προσομοιώνεται/ }),
     ).toBeDisabled();
   });
 });

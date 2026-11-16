@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -38,6 +38,7 @@ function ProductPage() {
   const { handle } = Route.useParams();
   const { data: product, isLoading } = useQuery(productQuery(handle));
   const { data: details } = useQuery(productDetailsQuery);
+  const navigate = useNavigate();
   const addItem = useCartStore((state) => state.addItem);
   const cartLoading = useCartStore((state) => state.isLoading);
 
@@ -55,6 +56,15 @@ function ProductPage() {
     try {
       await addItem(p);
       toast.success("Προστέθηκε στο καλάθι", { description: p.title });
+    } catch {
+      toast.error("Δεν ήταν δυνατή η προσθήκη στο καλάθι.");
+    }
+  }
+
+  async function buyNow() {
+    try {
+      await addItem(p);
+      navigate({ to: "/checkout" });
     } catch {
       toast.error("Δεν ήταν δυνατή η προσθήκη στο καλάθι.");
     }
@@ -86,14 +96,14 @@ function ProductPage() {
             {p.productType && <>Κατηγορία: {p.productType}</>}
             {" · "}Κωδικός: {p.sku}
           </p>
-          <Button
-            size="lg"
-            className="mt-6"
-            onClick={() => void addToCart()}
-            disabled={cartLoading}
-          >
-            Προσθήκη στο καλάθι
-          </Button>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button size="lg" onClick={() => void addToCart()} disabled={cartLoading}>
+              Προσθήκη στο καλάθι
+            </Button>
+            <Button size="lg" onClick={() => void buyNow()} disabled={cartLoading}>
+              Αγορά Τώρα
+            </Button>
+          </div>
           <section className="mt-6">
             <h2 className="font-display text-xl">Περιγραφή</h2>
             <p className="mt-2 whitespace-pre-line leading-relaxed text-muted-foreground">

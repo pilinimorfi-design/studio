@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Clock, MapPin, Video } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, ExternalLink, MapPin, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
-import { homeContentQuery, productsQuery } from "@/lib/queries";
+import { StarRatingDisplay } from "@/components/ReviewStars";
+import { getGoogleReviewUrl } from "@/lib/reviews";
+import { homeContentQuery, productsQuery, reviewSummaryQuery } from "@/lib/queries";
 import { CATEGORIES } from "@/lib/categories";
 import {
   Select,
@@ -41,6 +43,8 @@ function Index() {
   const { data: content } = useSuspenseQuery(homeContentQuery);
   const { hero, about, seminarsStatus, seminarsCta } = content;
   const products = useQuery(productsQuery);
+  const reviews = useQuery(reviewSummaryQuery);
+  const googleReviewUrl = getGoogleReviewUrl();
   const [category, setCategory] = useState<string>(ALL);
   const [page, setPage] = useState(1);
   const productTypes = (products.data ?? [])
@@ -88,6 +92,53 @@ function Index() {
             <Button asChild size="lg" variant="secondary">
               <Link to="/seminars">Σεμινάρια</Link>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="reviews-heading" className="border-b border-border bg-secondary">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-5 py-10 text-center md:flex-row md:text-left">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.16em] text-primary">
+              Η γνώμη σας μετράει
+            </p>
+            <h2 id="reviews-heading" className="mt-2 font-display text-2xl md:text-3xl">
+              Η εμπιστοσύνη σας μας εμπνέει
+            </h2>
+          </div>
+          <div className="flex flex-col items-center gap-2 md:items-start">
+            {reviews.isPending ? (
+              <p className="text-sm text-muted-foreground">Φόρτωση αξιολογήσεων...</p>
+            ) : reviews.isError ? (
+              <p role="alert" className="text-sm text-destructive">
+                Δεν ήταν δυνατή η φόρτωση των αξιολογήσεων.
+              </p>
+            ) : reviews.data.reviewCount > 0 && reviews.data.averageRating !== null ? (
+              <>
+                <div className="flex items-center gap-3">
+                  <span className="font-display text-3xl font-semibold">
+                    {reviews.data.averageRating.toFixed(1)}
+                  </span>
+                  <StarRatingDisplay rating={reviews.data.averageRating} />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Με βάση {reviews.data.reviewCount}{" "}
+                  {reviews.data.reviewCount === 1 ? "αξιολόγηση" : "αξιολογήσεις"}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Γίνετε οι πρώτοι που θα μοιραστούν την εμπειρία τους.
+              </p>
+            )}
+            {googleReviewUrl && (
+              <Button asChild variant="link" className="h-auto p-0">
+                <a href={googleReviewUrl} target="_blank" rel="noopener noreferrer">
+                  Αξιολογήστε μας στο Google
+                  <ExternalLink className="ml-1 size-4" aria-hidden="true" />
+                </a>
+              </Button>
+            )}
           </div>
         </div>
       </section>

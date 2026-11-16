@@ -16,8 +16,8 @@ describe("Όροι Χρήσης — παραγγελίες, πληρωμές κ�
   it("clearly says checkout ordering and payments are not active yet", async () => {
     const text = await ordersText();
 
-    expect(text).toContain("η καταχώριση και πληρωμή παραγγελιών δεν είναι ενεργές");
-    expect(text).toContain("δεν αποτελούν ολοκληρωμένη παραγγελία");
+    expect(text).toContain("η καταχώριση και πληρωμή πραγματικών παραγγελιών δεν είναι ενεργές");
+    expect(text).toContain("δεν αποτελούν ολοκληρωμένη πραγματική παραγγελία");
   });
 
   it("describes EveryPay card payment and conditional cash on delivery", async () => {

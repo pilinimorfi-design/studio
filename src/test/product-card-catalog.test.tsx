@@ -1,14 +1,20 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const productCardMocks = vi.hoisted(() => ({
+  addItem: vi.fn(async () => {}),
+  navigate: vi.fn(),
+}));
+
 vi.mock("@tanstack/react-router", () => ({
+  useNavigate: () => productCardMocks.navigate,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Link: ({ children }: any) => <a>{children}</a>,
 }));
 vi.mock("@/stores/cartStore", () => ({
   useCartStore: (
     selector: (state: { addItem: () => Promise<void>; isLoading: boolean }) => unknown,
-  ) => selector({ addItem: async () => {}, isLoading: false }),
+  ) => selector({ addItem: productCardMocks.addItem, isLoading: false }),
 }));
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
@@ -35,7 +41,10 @@ const product: CatalogProduct = {
 };
 
 describe("ProductCard — δημόσιος κατάλογος Supabase", () => {
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
 
   it("shows product details and allows adding the item to the cart", () => {
     render(<ProductCard product={product} />);
@@ -43,5 +52,17 @@ describe("ProductCard — δημόσιος κατάλογος Supabase", () => {
     expect(screen.getByText("Πήλινο Μπολ")).toBeInTheDocument();
     expect(screen.getByText("Χειροποίητο κεραμικό μπολ")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Προσθήκη στο καλάθι" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Αγορά Τώρα" })).toBeInTheDocument();
+  });
+
+  it("adds the product and navigates to checkout when buying now", async () => {
+    render(<ProductCard product={product} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Αγορά Τώρα" }));
+
+    await waitFor(() => {
+      expect(productCardMocks.addItem).toHaveBeenCalledWith(product);
+      expect(productCardMocks.navigate).toHaveBeenCalledWith({ to: "/checkout" });
+    });
   });
 });

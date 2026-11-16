@@ -16,6 +16,7 @@ interface CartStore {
   items: GuestCartItem[];
   isLoading: boolean;
   error: string | null;
+  clearLocalCart: () => void;
   loadCart: () => Promise<void>;
   addItem: (product: CatalogProduct) => Promise<void>;
   updateQuantity: (productId: string, quantity: number) => Promise<void>;
@@ -33,6 +34,8 @@ export const useCartStore = create<CartStore>()(
       items: [],
       isLoading: false,
       error: null,
+
+      clearLocalCart: () => set({ items: [], error: null }),
 
       loadCart: async () => {
         const { cartToken } = get();

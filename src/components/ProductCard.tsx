@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ProductAttributes } from "@/components/ProductAttributes";
@@ -8,6 +8,7 @@ import { formatPrice, type CatalogProduct } from "@/lib/shopify";
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
   const image = product.imageUrl;
+  const navigate = useNavigate();
   const addItem = useCartStore((state) => state.addItem);
   const isLoading = useCartStore((state) => state.isLoading);
 
@@ -15,6 +16,15 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
     try {
       await addItem(product);
       toast.success("Προστέθηκε στο καλάθι", { description: product.title });
+    } catch {
+      toast.error("Δεν ήταν δυνατή η προσθήκη στο καλάθι.");
+    }
+  }
+
+  async function buyNow() {
+    try {
+      await addItem(product);
+      navigate({ to: "/checkout" });
     } catch {
       toast.error("Δεν ήταν δυνατή η προσθήκη στο καλάθι.");
     }
@@ -69,6 +79,15 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           disabled={isLoading}
         >
           Προσθήκη στο καλάθι
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="relative z-10 mt-1"
+          onClick={() => void buyNow()}
+          disabled={isLoading}
+        >
+          Αγορά Τώρα
         </Button>
       </div>
     </article>

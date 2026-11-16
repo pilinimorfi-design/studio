@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, CreditCard, Info, WalletCards } from "lucide-react";
 
@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { BoxNowLockerPicker } from "@/components/BoxNowLockerPicker";
 import type { BoxNowLocker } from "@/lib/boxnow";
+import { createSimulatedOrder } from "@/lib/orders";
 import { lookupGreekPostalCode } from "@/lib/postal-code";
 import { useCartStore } from "@/stores/cartStore";
 import { formatPrice } from "@/lib/shopify";
@@ -17,6 +18,8 @@ type ShippingMethod = "boxnow" | "acs";
 
 export function CheckoutPage() {
   const items = useCartStore((state) => state.items);
+  const cartToken = useCartStore((state) => state.cartToken);
+  const clearLocalCart = useCartStore((state) => state.clearLocalCart);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("everypay");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("boxnow");
   const [selectedLocker, setSelectedLocker] = useState<BoxNowLocker | null>(null);
@@ -24,12 +27,62 @@ export function CheckoutPage() {
   const [city, setCity] = useState("");
   const [county, setCounty] = useState("");
   const [postalCodeStatus, setPostalCodeStatus] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const simulationEnabled = import.meta.env.DEV;
   const cityWasEdited = useRef(false);
   const countyWasEdited = useRef(false);
   const subtotal = items.reduce(
     (sum, item) => sum + Number(item.product.price.amount) * item.quantity,
     0,
   );
+
+  async function submitSimulatedCheckout(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitError("");
+    if (paymentMethod !== "everypay") {
+      setSubmitError("Η προσομοίωση υποστηρίζει προσωρινά μόνο πληρωμή με κάρτα.");
+      return;
+    }
+    if (!cartToken) {
+      setSubmitError("Δεν βρέθηκε το ενεργό καλάθι. Ανανεώστε τη σελίδα και δοκιμάστε ξανά.");
+      return;
+    }
+    if (shippingMethod === "boxnow" && !selectedLocker) {
+      setSubmitError("Επιλέξτε πρώτα θυρίδα BoxNow.");
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    setIsSubmitting(true);
+    try {
+      const checkout = await createSimulatedOrder({
+        data: {
+          cartToken,
+          customerName: String(formData.get("customerName") ?? ""),
+          email: String(formData.get("email") ?? ""),
+          phone: String(formData.get("phone") ?? ""),
+          shippingMethod,
+          lockerId: selectedLocker?.id ?? "",
+          lockerName: selectedLocker?.name ?? "",
+          shippingAddress: String(formData.get("shippingAddress") ?? ""),
+          shippingPostalCode: postalCode,
+          shippingCity: city,
+          shippingCounty: county,
+          shippingNotes: String(formData.get("shippingNotes") ?? ""),
+        },
+      });
+      clearLocalCart();
+      window.location.assign(checkout.paymentUrl);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Δεν ήταν δυνατή η δημιουργία δοκιμαστικής παραγγελίας.",
+      );
+      setIsSubmitting(false);
+    }
+  }
 
   useEffect(() => {
     if (shippingMethod !== "acs" || !/^\d{5}$/.test(postalCode)) {
@@ -99,14 +152,21 @@ export function CheckoutPage() {
       <h1 className="mt-5 font-display text-4xl">Ταμείο</h1>
       <div
         role="status"
-        className="mt-3 flex max-w-3xl gap-3 rounded-md border border-border bg-muted/40 p-4 text-sm text-muted-foreground"
+        className="mt-3 flex max-w-3xl gap-3 rounded-md border border-primary/30 bg-secondary p-4 text-sm text-secondary-foreground"
       >
         <Info className="mt-0.5 size-4 shrink-0" />
-        <p>
-          Μπορείτε να επιλέξετε τρόπο πληρωμής και αποστολής. Η καταχώριση παραγγελίας, η χρέωση
-          EveryPay και η δημιουργία αποστολής ACS/BoxNow δεν είναι ακόμη ενεργές. Δεν θα γίνει
-          χρέωση ή αποστολή από αυτή τη σελίδα.
-        </p>
+        {simulationEnabled ? (
+          <p>
+            <strong>Λειτουργία δοκιμής:</strong> η παραγγελία αποθηκεύεται ως δοκιμαστική και οδηγεί
+            σε εικονικό περιβάλλον πληρωμής. Δεν γίνεται χρέωση και δεν δημιουργείται πραγματική
+            αποστολή.
+          </p>
+        ) : (
+          <p>
+            Η ολοκλήρωση παραγγελίας και η πληρωμή δεν είναι διαθέσιμες σε αυτό το περιβάλλον. Δεν
+            θα γίνει χρέωση ή αποστολή από αυτή τη σελίδα.
+          </p>
+        )}
       </div>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
@@ -114,22 +174,39 @@ export function CheckoutPage() {
           <h2 className="font-display text-2xl">Στοιχεία επισκέπτη</h2>
           <form
             className="mt-6 space-y-7"
-            onSubmit={(event) => {
-              event.preventDefault();
-            }}
+            onSubmit={(event) => void submitSimulatedCheckout(event)}
           >
             <div className="space-y-5">
               <div>
                 <label htmlFor="checkout-name" className="mb-1.5 block text-sm font-medium">
                   Ονοματεπώνυμο
                 </label>
-                <Input id="checkout-name" autoComplete="name" required />
+                <Input id="checkout-name" name="customerName" autoComplete="name" required />
               </div>
               <div>
                 <label htmlFor="checkout-email" className="mb-1.5 block text-sm font-medium">
                   Email
                 </label>
-                <Input id="checkout-email" type="email" autoComplete="email" required />
+                <Input
+                  id="checkout-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="checkout-phone" className="mb-1.5 block text-sm font-medium">
+                  Τηλέφωνο επικοινωνίας
+                </label>
+                <Input
+                  id="checkout-phone"
+                  name="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  required
+                />
               </div>
             </div>
 
@@ -179,22 +256,15 @@ export function CheckoutPage() {
               <fieldset className="space-y-5">
                 <legend className="font-display text-xl">Διεύθυνση παράδοσης</legend>
                 <div>
-                  <label htmlFor="checkout-phone" className="mb-1.5 block text-sm font-medium">
-                    Τηλέφωνο επικοινωνίας
-                  </label>
-                  <Input
-                    id="checkout-phone"
-                    type="tel"
-                    autoComplete="tel"
-                    inputMode="tel"
-                    required
-                  />
-                </div>
-                <div>
                   <label htmlFor="checkout-address" className="mb-1.5 block text-sm font-medium">
                     Οδός και αριθμός
                   </label>
-                  <Input id="checkout-address" autoComplete="street-address" required />
+                  <Input
+                    id="checkout-address"
+                    name="shippingAddress"
+                    autoComplete="street-address"
+                    required
+                  />
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
@@ -277,6 +347,7 @@ export function CheckoutPage() {
                   </label>
                   <Textarea
                     id="checkout-delivery-notes"
+                    name="shippingNotes"
                     placeholder="Πρόσθεσε σχόλια παράδοσης"
                     autoComplete="off"
                   />
@@ -315,8 +386,9 @@ export function CheckoutPage() {
                   <span>
                     <span className="block font-medium">Κάρτα μέσω EveryPay</span>
                     <span className="mt-1 block text-sm text-muted-foreground">
-                      Η ασφαλής ανακατεύθυνση και επιβεβαίωση πληρωμής θα ενεργοποιηθούν μετά τη
-                      διασύνδεση EveryPay.
+                      {simulationEnabled
+                        ? "Δοκιμαστική ανακατεύθυνση σε εικονικό περιβάλλον. Δεν εισάγονται στοιχεία κάρτας."
+                        : "Η ανακατεύθυνση πληρωμής θα ενεργοποιηθεί μετά τη διασύνδεση EveryPay."}
                     </span>
                   </span>
                 </label>
@@ -337,8 +409,24 @@ export function CheckoutPage() {
               </RadioGroup>
             </fieldset>
 
-            <Button type="submit" size="lg" className="w-full" disabled>
-              Η ολοκλήρωση παραγγελίας δεν είναι ακόμη διαθέσιμη
+            {submitError && (
+              <p role="alert" className="text-sm text-destructive">
+                {submitError}
+              </p>
+            )}
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              disabled={!simulationEnabled || isSubmitting || paymentMethod === "cod"}
+            >
+              {isSubmitting
+                ? "Δημιουργία δοκιμαστικής παραγγελίας..."
+                : simulationEnabled
+                  ? paymentMethod === "cod"
+                    ? "Η αντικαταβολή δεν προσομοιώνεται"
+                    : "Συνέχεια σε δοκιμαστική πληρωμή"
+                  : "Η ολοκλήρωση παραγγελίας δεν είναι ακόμη διαθέσιμη"}
             </Button>
           </form>
         </section>

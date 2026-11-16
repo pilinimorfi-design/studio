@@ -168,13 +168,20 @@ export type Database = {
           customer_name: string;
           email: string;
           id: string;
+          is_test: boolean;
           order_number: number;
           payment_provider: string;
           payment_reference: string | null;
           payment_status: string;
           payment_url: string | null;
           phone: string;
+          shipping_address: string | null;
           shipping_amount: number | null;
+          shipping_city: string | null;
+          shipping_county: string | null;
+          shipping_method: string | null;
+          shipping_notes: string | null;
+          shipping_postal_code: string | null;
           status: string;
           subtotal: number;
           total_amount: number;
@@ -191,13 +198,20 @@ export type Database = {
           customer_name: string;
           email: string;
           id?: string;
+          is_test?: boolean;
           order_number?: number;
           payment_provider?: string;
           payment_reference?: string | null;
           payment_status?: string;
           payment_url?: string | null;
           phone: string;
+          shipping_address?: string | null;
           shipping_amount?: number | null;
+          shipping_city?: string | null;
+          shipping_county?: string | null;
+          shipping_method?: string | null;
+          shipping_notes?: string | null;
+          shipping_postal_code?: string | null;
           status?: string;
           subtotal: number;
           total_amount: number;
@@ -214,13 +228,20 @@ export type Database = {
           customer_name?: string;
           email?: string;
           id?: string;
+          is_test?: boolean;
           order_number?: number;
           payment_provider?: string;
           payment_reference?: string | null;
           payment_status?: string;
           payment_url?: string | null;
           phone?: string;
+          shipping_address?: string | null;
           shipping_amount?: number | null;
+          shipping_city?: string | null;
+          shipping_county?: string | null;
+          shipping_method?: string | null;
+          shipping_notes?: string | null;
+          shipping_postal_code?: string | null;
           status?: string;
           subtotal?: number;
           total_amount?: number;
@@ -279,6 +300,32 @@ export type Database = {
           },
         ];
       };
+      order_reviews: {
+        Row: {
+          created_at: string;
+          order_id: string;
+          rating: number;
+        };
+        Insert: {
+          created_at?: string;
+          order_id: string;
+          rating: number;
+        };
+        Update: {
+          created_at?: string;
+          order_id?: string;
+          rating?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_reviews_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: true;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -299,6 +346,30 @@ export type Database = {
           p_shipping_amount: number;
         };
         Returns: string;
+      };
+      create_simulated_guest_order: {
+        Args: {
+          p_cart_token_hash: string;
+          p_customer_name: string;
+          p_email: string;
+          p_phone: string;
+          p_shipping_method: string;
+          p_locker_id: string;
+          p_locker_name: string;
+          p_shipping_address: string;
+          p_shipping_postal_code: string;
+          p_shipping_city: string;
+          p_shipping_county: string;
+          p_shipping_notes: string;
+        };
+        Returns: string;
+      };
+      get_order_review_summary: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          average_rating: number | null;
+          review_count: number;
+        }[];
       };
     };
     Enums: {

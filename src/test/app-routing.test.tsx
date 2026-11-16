@@ -62,4 +62,12 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).toBe("/order-confirmation");
   });
+
+  it("matches the development-only mock payment page", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/mock-payment");
+
+    expect(matches.at(-1)?.routeId).toBe("/mock-payment");
+  });
 });
