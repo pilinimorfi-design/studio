@@ -35,6 +35,9 @@ const emptyForm = () => ({
   categoryId: "",
   imageUrl: "",
   dimensions: "",
+  heightCm: "",
+  lengthCm: "",
+  widthCm: "",
   weightGrams: "",
   care: "",
   glazed: false,
@@ -158,6 +161,12 @@ export function ProductManagementForm() {
       categoryId,
       imageUrl: product.imageUrl ?? "",
       dimensions: product.dimensions ?? "",
+      heightCm:
+        product.heightCm === null || product.heightCm === undefined ? "" : String(product.heightCm),
+      lengthCm:
+        product.lengthCm === null || product.lengthCm === undefined ? "" : String(product.lengthCm),
+      widthCm:
+        product.widthCm === null || product.widthCm === undefined ? "" : String(product.widthCm),
       weightGrams: product.weightGrams === null ? "" : String(product.weightGrams),
       care: product.care ?? "",
       glazed: product.glazed ?? false,
@@ -376,6 +385,56 @@ export function ProductManagementForm() {
                   maxLength={500}
                 />
               </div>
+              <fieldset>
+                <legend className="mb-1.5 block text-sm font-medium">
+                  Διαστάσεις συσκευασμένου προϊόντος (cm)
+                </legend>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Χρησιμοποιούνται για τον υπολογισμό όγκου και τον αυτόματο χωρισμό σε δέματα.
+                  Συμπεριλάβετε τη συσκευασία προστασίας.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <FieldLabel htmlFor="product-height">Ύψος</FieldLabel>
+                    <Input
+                      id="product-height"
+                      type="number"
+                      min="0.01"
+                      max="500"
+                      step="0.01"
+                      required
+                      value={form.heightCm}
+                      onChange={(event) => setForm({ ...form, heightCm: event.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <FieldLabel htmlFor="product-length">Μήκος</FieldLabel>
+                    <Input
+                      id="product-length"
+                      type="number"
+                      min="0.01"
+                      max="500"
+                      step="0.01"
+                      required
+                      value={form.lengthCm}
+                      onChange={(event) => setForm({ ...form, lengthCm: event.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <FieldLabel htmlFor="product-width">Πλάτος</FieldLabel>
+                    <Input
+                      id="product-width"
+                      type="number"
+                      min="0.01"
+                      max="500"
+                      step="0.01"
+                      required
+                      value={form.widthCm}
+                      onChange={(event) => setForm({ ...form, widthCm: event.target.value })}
+                    />
+                  </div>
+                </div>
+              </fieldset>
               <div>
                 <FieldLabel htmlFor="product-weight">Βάρος (g)</FieldLabel>
                 <Input

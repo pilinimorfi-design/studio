@@ -92,11 +92,13 @@ export type Database = {
           dimensions: string | null;
           fired: boolean | null;
           glazed: boolean | null;
+          height_cm: number | null;
           handle: string;
           home_use: boolean | null;
           id: string;
           image_url: string | null;
           is_published: boolean;
+          length_cm: number | null;
           price: number;
           product_type: string;
           sku: string;
@@ -104,6 +106,7 @@ export type Database = {
           title: string;
           updated_at: string;
           weight_grams: number | null;
+          width_cm: number | null;
         };
         Insert: {
           care?: string | null;
@@ -113,11 +116,13 @@ export type Database = {
           dimensions?: string | null;
           fired?: boolean | null;
           glazed?: boolean | null;
+          height_cm?: number | null;
           handle: string;
           home_use?: boolean | null;
           id?: string;
           image_url?: string | null;
           is_published?: boolean;
+          length_cm?: number | null;
           price: number;
           product_type?: string;
           sku?: string;
@@ -125,6 +130,7 @@ export type Database = {
           title: string;
           updated_at?: string;
           weight_grams?: number | null;
+          width_cm?: number | null;
         };
         Update: {
           care?: string | null;
@@ -134,11 +140,13 @@ export type Database = {
           dimensions?: string | null;
           fired?: boolean | null;
           glazed?: boolean | null;
+          height_cm?: number | null;
           handle?: string;
           home_use?: boolean | null;
           id?: string;
           image_url?: string | null;
           is_published?: boolean;
+          length_cm?: number | null;
           price?: number;
           product_type?: string;
           sku?: string;
@@ -146,6 +154,7 @@ export type Database = {
           title?: string;
           updated_at?: string;
           weight_grams?: number | null;
+          width_cm?: number | null;
         };
         Relationships: [
           {
@@ -220,6 +229,7 @@ export type Database = {
           shipping_method: string | null;
           shipping_notes: string | null;
           shipping_postal_code: string | null;
+          shipping_packages: Json;
           status: string;
           subtotal: number;
           total_amount: number;
@@ -252,6 +262,7 @@ export type Database = {
           shipping_method?: string | null;
           shipping_notes?: string | null;
           shipping_postal_code?: string | null;
+          shipping_packages?: Json;
           status?: string;
           subtotal: number;
           total_amount: number;
@@ -284,6 +295,7 @@ export type Database = {
           shipping_method?: string | null;
           shipping_notes?: string | null;
           shipping_postal_code?: string | null;
+          shipping_packages?: Json;
           status?: string;
           subtotal?: number;
           total_amount?: number;
@@ -430,6 +442,8 @@ export type Database = {
           p_shipping_notes: string;
           p_locker_address: string;
           p_locker_postal_code: string;
+          p_shipping_amount: number;
+          p_shipping_packages: Json;
         };
         Returns: string;
       };

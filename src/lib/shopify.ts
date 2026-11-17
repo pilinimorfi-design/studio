@@ -51,6 +51,9 @@ export interface CatalogProduct {
   imageUrl: string | null;
   dimensions: string | null;
   weightGrams: number | null;
+  heightCm?: number | null;
+  lengthCm?: number | null;
+  widthCm?: number | null;
   care: string | null;
   glazed: boolean | null;
   fired: boolean | null;
@@ -81,6 +84,9 @@ type ProductRow = {
   image_url: string | null;
   dimensions: string | null;
   weight_grams: number | null;
+  height_cm: number | null;
+  length_cm: number | null;
+  width_cm: number | null;
   care: string | null;
   glazed: boolean | null;
   fired: boolean | null;
@@ -104,6 +110,9 @@ function mapCatalogProduct(row: ProductRow): ManagedProduct {
     imageUrl: row.image_url,
     dimensions: row.dimensions,
     weightGrams: row.weight_grams,
+    heightCm: row.height_cm,
+    lengthCm: row.length_cm,
+    widthCm: row.width_cm,
     care: row.care,
     glazed: row.glazed,
     fired: row.fired,
@@ -115,7 +124,7 @@ function mapCatalogProduct(row: ProductRow): ManagedProduct {
 }
 
 const PRODUCT_SELECT =
-  "id, sku, stock, category_id, title, description, handle, product_type, price, image_url, dimensions, weight_grams, care, glazed, fired, home_use, is_published, created_at, updated_at";
+  "id, sku, stock, category_id, title, description, handle, product_type, price, image_url, dimensions, weight_grams, height_cm, length_cm, width_cm, care, glazed, fired, home_use, is_published, created_at, updated_at";
 
 async function verifyProductAdminPassword(password: string) {
   const expectedPassword = process.env["PRODUCT_ADMIN_PASSWORD"];
@@ -213,6 +222,18 @@ const productInputSchema = z.object({
     .refine((value) => new URL(value).protocol === "https:")
     .or(z.literal("")),
   dimensions: z.string().trim().max(500),
+  heightCm: z
+    .string()
+    .regex(/^\d+(?:\.\d{1,2})?$/)
+    .refine((value) => Number(value) > 0 && Number(value) <= 500),
+  lengthCm: z
+    .string()
+    .regex(/^\d+(?:\.\d{1,2})?$/)
+    .refine((value) => Number(value) > 0 && Number(value) <= 500),
+  widthCm: z
+    .string()
+    .regex(/^\d+(?:\.\d{1,2})?$/)
+    .refine((value) => Number(value) > 0 && Number(value) <= 500),
   weightGrams: z
     .string()
     .max(20)
@@ -301,6 +322,9 @@ async function productValues(input: ManagedProductInput) {
     image_url: input.imageUrl || null,
     dimensions: input.dimensions || null,
     weight_grams: input.weightGrams === "" ? null : Number(input.weightGrams),
+    height_cm: Number(input.heightCm),
+    length_cm: Number(input.lengthCm),
+    width_cm: Number(input.widthCm),
     care: input.care || null,
     glazed: input.glazed,
     fired: input.fired,

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, CreditCard, Info, WalletCards } from "lucide-react";
 
@@ -10,6 +10,7 @@ import { BoxNowLockerPicker } from "@/components/BoxNowLockerPicker";
 import type { BoxNowLocker } from "@/lib/boxnow";
 import { createSimulatedOrder } from "@/lib/orders";
 import { lookupGreekPostalCode } from "@/lib/postal-code";
+import { ACS_PRICE_PER_PARCEL, BOXNOW_PACKAGES, packBoxNowItems } from "@/lib/shipping";
 import { useCartStore } from "@/stores/cartStore";
 import { formatPrice } from "@/lib/shopify";
 
@@ -34,7 +35,7 @@ export function CheckoutPage() {
   const clearLocalCart = useCartStore((state) => state.clearLocalCart);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("everypay");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("boxnow");
-  const [selectedLocker, setSelectedLocker] = useState<BoxNowLocker | null>(null);
+  const [selectedLockers, setSelectedLockers] = useState<Record<number, BoxNowLocker>>({});
   const [postalCode, setPostalCode] = useState("");
   const [city, setCity] = useState("");
   const [village, setVillage] = useState("");
@@ -49,6 +50,33 @@ export function CheckoutPage() {
   const subtotal = items.reduce(
     (sum, item) => sum + Number(item.product.price.amount) * item.quantity,
     0,
+  );
+  const boxNowPacking = useMemo(
+    () =>
+      packBoxNowItems(
+        items.map(({ product, quantity }) => ({
+          productId: product.id,
+          title: product.title,
+          quantity,
+          heightCm: product.heightCm,
+          lengthCm: product.lengthCm,
+          widthCm: product.widthCm,
+        })),
+      ),
+    [items],
+  );
+  const boxNowShipping = boxNowPacking.packages.reduce((total, parcel) => total + parcel.price, 0);
+  const shippingAmount =
+    shippingMethod === "boxnow" ? boxNowShipping : items.length > 0 ? ACS_PRICE_PER_PARCEL : 0;
+  const orderTotal = subtotal + shippingAmount;
+  const boxNowPackageKey = JSON.stringify(
+    boxNowPacking.packages.map((parcel) => [
+      parcel.size,
+      parcel.items.map(({ productId, quantity }) => [productId, quantity]),
+    ]),
+  );
+  const activeBoxNowPackage = boxNowPacking.packages.findIndex(
+    (_, index) => !selectedLockers[index],
   );
 
   function getFieldError(
@@ -224,7 +252,7 @@ export function CheckoutPage() {
         ["village", villageName],
         ["county", shippingCounty],
       );
-    } else if (!selectedLocker) {
+    } else if (activeBoxNowPackage >= 0) {
       errors.locker = getFieldError("locker", "");
     }
     fieldValues.push(["shippingNotes", shippingNotes]);
@@ -264,10 +292,36 @@ export function CheckoutPage() {
           email,
           phone,
           shippingMethod,
-          lockerId: selectedLocker?.id ?? "",
-          lockerName: selectedLocker?.name ?? "",
-          lockerAddressLine: selectedLocker?.addressLine ?? "",
-          lockerPostalCode: selectedLocker?.postalCode ?? "",
+          lockerId: selectedLockers[0]?.id ?? "",
+          lockerName: selectedLockers[0]?.name ?? "",
+          lockerAddressLine: selectedLockers[0]?.addressLine ?? "",
+          lockerPostalCode: selectedLockers[0]?.postalCode ?? "",
+          shippingPackages:
+            shippingMethod === "boxnow"
+              ? boxNowPacking.packages.map((parcel, index) => ({
+                  size: parcel.size,
+                  volumeCm3: parcel.volumeCm3,
+                  items: parcel.items.map(({ productId, quantity }) => ({ productId, quantity })),
+                  locker: selectedLockers[index]
+                    ? {
+                        id: selectedLockers[index].id,
+                        name: selectedLockers[index].name,
+                        addressLine: selectedLockers[index].addressLine ?? "",
+                        postalCode: selectedLockers[index].postalCode ?? "",
+                      }
+                    : null,
+                }))
+              : [
+                  {
+                    size: "acs" as const,
+                    volumeCm3: null,
+                    items: items.map(({ product, quantity }) => ({
+                      productId: product.id,
+                      quantity,
+                    })),
+                    locker: null,
+                  },
+                ],
           shippingAddress,
           shippingPostalCode: postalCode,
           shippingCity,
@@ -334,6 +388,14 @@ export function CheckoutPage() {
       window.clearTimeout(timeout);
     };
   }, [postalCode, shippingMethod]);
+
+  useEffect(() => {
+    if (boxNowPacking.error && shippingMethod === "boxnow") setShippingMethod("acs");
+  }, [boxNowPacking.error, shippingMethod]);
+
+  useEffect(() => {
+    setSelectedLockers({});
+  }, [boxNowPackageKey]);
 
   if (!items.length) {
     return (
@@ -442,8 +504,8 @@ export function CheckoutPage() {
                 value={shippingMethod}
                 onValueChange={(value) => {
                   if (value === "boxnow" || value === "acs") {
+                    if (value === "boxnow" && boxNowPacking.error) return;
                     setShippingMethod(value);
-                    if (value !== "boxnow") setSelectedLocker(null);
                     setFieldErrors((current) => ({ ...current, locker: undefined }));
                   }
                 }}
@@ -452,13 +514,24 @@ export function CheckoutPage() {
               >
                 <label
                   htmlFor="shipping-boxnow"
-                  className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-4"
+                  className={`flex items-start gap-3 rounded-md border border-border p-4 ${
+                    boxNowPacking.error ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                  }`}
                 >
-                  <RadioGroupItem id="shipping-boxnow" value="boxnow" className="mt-1" />
+                  <RadioGroupItem
+                    id="shipping-boxnow"
+                    value="boxnow"
+                    className="mt-1"
+                    disabled={Boolean(boxNowPacking.error)}
+                  />
                   <span>
                     <span className="block font-medium">BoxNow Locker</span>
                     <span className="mt-1 block text-sm text-muted-foreground">
-                      Παραλαβή από locker που επιλέγετε στον χάρτη BoxNow.
+                      {boxNowPacking.error
+                        ? boxNowPacking.error
+                        : `${boxNowPacking.packages.length} ${
+                            boxNowPacking.packages.length === 1 ? "δέμα" : "δέματα"
+                          } — ${formatPrice(boxNowShipping.toString(), "EUR")}. Η χρέωση περιλαμβάνει συσκευασία.`}
                     </span>
                   </span>
                 </label>
@@ -470,8 +543,9 @@ export function CheckoutPage() {
                   <span>
                     <span className="block font-medium">ACS Courier</span>
                     <span className="mt-1 block text-sm text-muted-foreground">
-                      Παράδοση στη διεύθυνσή σας. Η τιμή και η υπηρεσία αντικαταβολής χρειάζονται
-                      επιβεβαίωση από την ACS.
+                      Παράδοση στη διεύθυνσή σας — προσωρινά{" "}
+                      {formatPrice(ACS_PRICE_PER_PARCEL.toString(), "EUR")} ανά δέμα,
+                      συμπεριλαμβανομένης της συσκευασίας.
                     </span>
                   </span>
                 </label>
@@ -643,25 +717,64 @@ export function CheckoutPage() {
                 </div>
               </fieldset>
             ) : (
-              <div className="rounded-md border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
-                <p className="mb-3">Επιλέξτε το locker από τον χάρτη BoxNow.</p>
-                <div id="checkout-locker-picker">
-                  <BoxNowLockerPicker
-                    onSelect={(locker) => {
-                      setSelectedLocker(locker);
-                      setFieldErrors((current) => ({ ...current, locker: undefined }));
-                    }}
-                  />
-                  {renderFieldError("locker")}
-                </div>
-                {selectedLocker && (
-                  <p role="status" className="mt-3 text-foreground">
-                    Επιλεγμένο locker: {selectedLocker.name}
-                    {selectedLocker.addressLine && ` — ${selectedLocker.addressLine}`}
-                    {selectedLocker.postalCode && `, ${selectedLocker.postalCode}`}
-                  </p>
+              <fieldset className="space-y-4 rounded-md border border-border bg-muted/40 p-4">
+                <legend className="font-display text-xl">Δέματα και lockers BoxNow</legend>
+                <p className="text-sm text-muted-foreground">
+                  Ο όγκος των συσκευασμένων προϊόντων χωρίζει αυτόματα την παραγγελία σε δέματα.
+                  Επιλέξτε ξεχωριστό locker για κάθε δέμα.
+                </p>
+                {boxNowPacking.packages.map((parcel, index) => {
+                  const parcelSize = BOXNOW_PACKAGES.find((size) => size.size === parcel.size)!;
+                  const locker = selectedLockers[index];
+                  return (
+                    <div key={index} className="rounded-md border border-border bg-card p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium">
+                            Δέμα {index + 1} — {parcelSize.label} ({parcelSize.heightCm} ×{" "}
+                            {parcelSize.lengthCm} × {parcelSize.widthCm} cm)
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Όγκος {parcel.volumeCm3.toLocaleString("el-GR")} cm³ ·{" "}
+                            {formatPrice(parcel.price.toString(), "EUR")}
+                          </p>
+                        </div>
+                        {locker && (
+                          <p className="text-right text-sm">
+                            {locker.name}
+                            {locker.addressLine && ` — ${locker.addressLine}`}
+                            {locker.postalCode && `, ${locker.postalCode}`}
+                          </p>
+                        )}
+                      </div>
+                      <ul className="mt-2 text-sm text-muted-foreground">
+                        {parcel.items.map((item) => (
+                          <li key={item.productId}>
+                            {item.title} × {item.quantity}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+                {activeBoxNowPackage >= 0 && (
+                  <div id="checkout-locker-picker">
+                    <p className="mb-3 text-sm font-medium">
+                      Επιλέξτε locker για το δέμα {activeBoxNowPackage + 1}.
+                    </p>
+                    <BoxNowLockerPicker
+                      onSelect={(locker) => {
+                        setSelectedLockers((current) => ({
+                          ...current,
+                          [activeBoxNowPackage]: locker,
+                        }));
+                        setFieldErrors((current) => ({ ...current, locker: undefined }));
+                      }}
+                    />
+                  </div>
                 )}
-              </div>
+                {renderFieldError("locker")}
+              </fieldset>
             )}
 
             <fieldset>
@@ -746,10 +859,32 @@ export function CheckoutPage() {
               <span>Μερικό σύνολο</span>
               <span>{formatPrice(subtotal.toString(), "EUR")}</span>
             </li>
+            {shippingMethod === "boxnow" ? (
+              boxNowPacking.packages.map((parcel, index) => {
+                const parcelSize = BOXNOW_PACKAGES.find((size) => size.size === parcel.size)!;
+                return (
+                  <li key={index} className="flex justify-between gap-4 p-4 text-sm">
+                    <span>
+                      Μεταφορικά BoxNow — δέμα {index + 1} ({parcelSize.label})
+                    </span>
+                    <span>{formatPrice(parcel.price.toString(), "EUR")}</span>
+                  </li>
+                );
+              })
+            ) : (
+              <li className="flex justify-between gap-4 p-4 text-sm">
+                <span>Μεταφορικά ACS — 1 δέμα (περιλαμβάνεται η συσκευασία)</span>
+                <span>{formatPrice(ACS_PRICE_PER_PARCEL.toString(), "EUR")}</span>
+              </li>
+            )}
+            <li className="flex justify-between border-t border-border p-4 font-semibold">
+              <span>Σύνολο</span>
+              <span>{formatPrice(orderTotal.toString(), "EUR")}</span>
+            </li>
           </ul>
           <p className="mt-3 text-sm text-muted-foreground">
-            Τα μεταφορικά και τυχόν χρέωση αντικαταβολής δεν έχουν οριστεί. Το τελικό σύνολο θα
-            εμφανίζεται πριν την ενεργοποίηση των παραγγελιών.
+            Οι χρεώσεις αποστολής περιλαμβάνουν έξοδα συσκευασίας. Η χρέωση ACS είναι προσωρινή
+            σταθερή τιμή ανά δέμα.
           </p>
         </section>
       </div>

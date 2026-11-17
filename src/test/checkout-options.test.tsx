@@ -26,6 +26,9 @@ vi.mock("@/stores/cartStore", () => ({
             id: "product-1",
             title: "Πήλινο Μπολ",
             price: { amount: "25.00", currencyCode: "EUR" },
+            heightCm: 10,
+            lengthCm: 10,
+            widthCm: 10,
           },
           quantity: 1,
         },
@@ -73,6 +76,9 @@ describe("Checkout options", () => {
     expect(screen.getByRole("radio", { name: /Κάρτα μέσω EveryPay/ })).toBeChecked();
     expect(screen.getByRole("radio", { name: /Αντικαταβολή/ })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /BoxNow Locker/ })).toBeChecked();
+    expect(screen.getByText("Μεταφορικά BoxNow — δέμα 1 (Μεσαίο)")).toBeInTheDocument();
+    expect(screen.getByText("Σύνολο")).toBeInTheDocument();
+    expect(screen.getByText(/29,00/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Επιλογή BoxNow Locker/ })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /ACS Courier/ })).toBeInTheDocument();
     expect(screen.queryByLabelText("Οδός και αριθμός")).not.toBeInTheDocument();
@@ -80,6 +86,8 @@ describe("Checkout options", () => {
     expect(checkoutMocks.postalCodeLookup).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("radio", { name: /ACS Courier/ }));
+    expect(screen.getByText(/Μεταφορικά ACS — 1 δέμα/)).toBeInTheDocument();
+    expect(screen.getAllByText(/12,00/)).toHaveLength(2);
     expect(screen.getByLabelText("Τηλέφωνο επικοινωνίας")).toBeRequired();
     expect(screen.getByLabelText("Νομός")).toBeInTheDocument();
     const postalCode = screen.getByLabelText("Ταχυδρομικός κώδικας");
