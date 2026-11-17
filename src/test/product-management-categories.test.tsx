@@ -63,6 +63,7 @@ describe("ProductManagementForm categories", () => {
     fireEvent.click(screen.getByRole("button", { name: "Φόρτωση καταλόγου" }));
 
     const categorySelect = await screen.findByRole("combobox", { name: "Κατηγορία" });
+    expect(screen.getByLabelText("Απόθεμα (τεμάχια)")).toHaveValue(1);
     fireEvent.click(categorySelect);
     expect(await screen.findByRole("option", { name: "Μπολ" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Πιάτο" })).toBeInTheDocument();

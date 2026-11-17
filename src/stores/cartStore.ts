@@ -60,7 +60,12 @@ export const useCartStore = create<CartStore>()(
           set({ items });
         } catch (error) {
           console.error("Failed to add cart item:", error);
-          set({ error: "Δεν ήταν δυνατή η προσθήκη του προϊόντος στο καλάθι." });
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : "Δεν ήταν δυνατή η προσθήκη του προϊόντος στο καλάθι.",
+          });
           throw error;
         } finally {
           set({ isLoading: false });
@@ -79,7 +84,10 @@ export const useCartStore = create<CartStore>()(
           set({ items });
         } catch (error) {
           console.error("Failed to update cart item:", error);
-          set({ error: "Δεν ήταν δυνατή η ενημέρωση της ποσότητας." });
+          set({
+            error:
+              error instanceof Error ? error.message : "Δεν ήταν δυνατή η ενημέρωση της ποσότητας.",
+          });
           throw error;
         } finally {
           set({ isLoading: false });

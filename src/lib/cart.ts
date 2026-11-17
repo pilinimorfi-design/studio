@@ -24,6 +24,7 @@ const changeItemSchema = z.object({
 type CartProductRow = {
   id: string;
   sku: string;
+  stock: number;
   title: string;
   description: string;
   handle: string;
@@ -54,7 +55,7 @@ async function loadCart(cartToken: string): Promise<GuestCartItem[]> {
   const { data: products, error: productsError } = await supabaseAdmin
     .from("products")
     .select(
-      "id, sku, title, description, handle, product_type, price, image_url, dimensions, weight_grams, care, glazed, fired, home_use",
+      "id, sku, stock, title, description, handle, product_type, price, image_url, dimensions, weight_grams, care, glazed, fired, home_use",
     )
     .in(
       "id",
@@ -76,6 +77,7 @@ async function loadCart(cartToken: string): Promise<GuestCartItem[]> {
         product: {
           id: row.id,
           sku: row.sku,
+          stock: row.stock,
           title: row.title,
           description: row.description,
           handle: row.handle,
@@ -117,11 +119,11 @@ export const updateGuestCartItem = createServerFn({ method: "POST" })
   .validator((input: z.infer<typeof changeItemSchema>) => changeItemSchema.parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("cart_items")
-      .update({ quantity: data.quantity, updated_at: new Date().toISOString() })
-      .eq("cart_token_hash", hashCartToken(data.cartToken))
-      .eq("product_id", data.productId);
+    const { error } = await supabaseAdmin.rpc("update_cart_item_quantity", {
+      p_cart_token_hash: hashCartToken(data.cartToken),
+      p_product_id: data.productId,
+      p_quantity: data.quantity,
+    });
     if (error) throw new Error(`Η ενημέρωση του καλαθιού απέτυχε: ${error.message}`);
     return loadCart(data.cartToken);
   });

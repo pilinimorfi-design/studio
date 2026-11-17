@@ -16,14 +16,20 @@ export function SiteHeader() {
         <nav className="col-span-2 row-start-2 flex items-center justify-between gap-3 text-xs whitespace-nowrap md:col-span-1 md:row-auto md:justify-normal md:gap-5 md:text-sm">
           <Link
             to="/seminars"
-            className="hidden text-muted-foreground hover:text-foreground md:inline"
+            className="hidden rounded-md border border-input bg-background px-3 py-2 text-muted-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground md:inline"
           >
             Σεμινάρια
           </Link>
-          <Link to="/about" className="text-muted-foreground hover:text-foreground">
+          <Link
+            to="/about"
+            className="rounded-md border border-input bg-background px-3 py-2 text-muted-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
+          >
             Σχετικά με εμάς
           </Link>
-          <Link to="/contact" className="text-muted-foreground hover:text-foreground">
+          <Link
+            to="/contact"
+            className="rounded-md border border-input bg-background px-3 py-2 text-muted-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
+          >
             Επικοινωνία
           </Link>
           <CartDrawer />

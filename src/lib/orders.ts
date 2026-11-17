@@ -4,22 +4,37 @@ import { createHash } from "node:crypto";
 import { getSimulatedPaymentUrls } from "@/lib/simulated-payment";
 
 const orderConfirmationSchema = z.object({ orderId: z.string().uuid() });
-const simulatedOrderSchema = z.object({
-  cartToken: z.string().uuid(),
-  customerName: z.string().trim().min(2).max(150),
-  email: z.string().trim().email().max(254),
-  phone: z.string().trim().min(7).max(32),
-  shippingMethod: z.enum(["boxnow", "acs"]),
-  lockerId: z.string().max(100),
-  lockerName: z.string().max(300),
-  lockerAddressLine: z.string().max(300),
-  lockerPostalCode: z.string().max(32),
-  shippingAddress: z.string().max(300),
-  shippingPostalCode: z.string().max(5),
-  shippingCity: z.string().max(150),
-  shippingCounty: z.string().max(150),
-  shippingNotes: z.string().max(1000),
-});
+const simulatedOrderSchema = z
+  .object({
+    cartToken: z.string().uuid(),
+    customerName: z.string().trim().min(2).max(150),
+    email: z.string().trim().email().max(254),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^\d{10}$/, "Το τηλέφωνο πρέπει να έχει 10 ψηφία."),
+    shippingMethod: z.enum(["boxnow", "acs"]),
+    lockerId: z.string().max(100),
+    lockerName: z.string().max(300),
+    lockerAddressLine: z.string().max(300),
+    lockerPostalCode: z.string().max(32),
+    shippingAddress: z.string().max(300),
+    shippingPostalCode: z.string().max(5),
+    shippingCity: z.string().max(150),
+    shippingCounty: z.string().max(150),
+    shippingNotes: z.string().max(1000),
+  })
+  .superRefine((data, context) => {
+    if (data.shippingMethod !== "acs") return;
+    const [municipality, village] = data.shippingCity.split("/").map((part) => part.trim());
+    if (!municipality || !village) {
+      context.addIssue({
+        code: "custom",
+        message: "Συμπληρώστε Δήμο/Πόλη και Χωριό.",
+        path: ["shippingCity"],
+      });
+    }
+  });
 const simulatedPaymentResultSchema = z.object({
   orderId: z.string().uuid(),
   result: z.enum(["success", "failure"]),
@@ -133,23 +148,12 @@ export const resolveSimulatedPayment = createServerFn({ method: "POST" })
     assertSimulationIsEnabled();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const successful = data.result === "success";
-    const { data: order, error } = await supabaseAdmin
-      .from("orders")
-      .update({
-        status: successful ? "paid" : "payment_failed",
-        payment_status: successful ? "paid" : "failed",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", data.orderId)
-      .eq("is_test", true)
-      .eq("payment_provider", "simulation")
-      .eq("payment_status", "pending")
-      .select("id")
-      .maybeSingle();
+    const { error } = await supabaseAdmin.rpc("resolve_simulated_order_payment", {
+      p_order_id: data.orderId,
+      p_successful: successful,
+    });
 
     if (error) throw new Error(`Η ενημέρωση δοκιμαστικής πληρωμής απέτυχε: ${error.message}`);
-    if (!order)
-      throw new Error("Η δοκιμαστική πληρωμή δεν είναι διαθέσιμη ή έχει ήδη ολοκληρωθεί.");
 
     return {
       redirectUrl: getSimulatedPaymentUrls(data.orderId)[

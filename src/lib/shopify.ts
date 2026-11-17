@@ -41,6 +41,7 @@ export interface ShopifyProduct {
 export interface CatalogProduct {
   id: string;
   sku: string;
+  stock: number;
   categoryId?: string | null;
   title: string;
   description: string;
@@ -70,6 +71,7 @@ export interface ManagedProductCategory {
 type ProductRow = {
   id: string;
   sku: string;
+  stock: number;
   category_id: string | null;
   title: string;
   description: string;
@@ -92,6 +94,7 @@ function mapCatalogProduct(row: ProductRow): ManagedProduct {
   return {
     id: row.id,
     sku: row.sku,
+    stock: row.stock,
     categoryId: row.category_id,
     title: row.title,
     description: row.description,
@@ -112,7 +115,7 @@ function mapCatalogProduct(row: ProductRow): ManagedProduct {
 }
 
 const PRODUCT_SELECT =
-  "id, sku, category_id, title, description, handle, product_type, price, image_url, dimensions, weight_grams, care, glazed, fired, home_use, is_published, created_at, updated_at";
+  "id, sku, stock, category_id, title, description, handle, product_type, price, image_url, dimensions, weight_grams, care, glazed, fired, home_use, is_published, created_at, updated_at";
 
 async function verifyProductAdminPassword(password: string) {
   const expectedPassword = process.env["PRODUCT_ADMIN_PASSWORD"];
@@ -217,6 +220,10 @@ const productInputSchema = z.object({
     .refine(
       (value) => value === "" || (Number.isFinite(Number(value)) && Number(value) <= 99999999.99),
     ),
+  stock: z
+    .string()
+    .regex(/^\d{1,6}$/)
+    .refine((value) => Number(value) <= 999999),
   care: z.string().trim().max(2000),
   glazed: z.boolean(),
   fired: z.boolean(),
@@ -299,6 +306,7 @@ async function productValues(input: ManagedProductInput) {
     fired: input.fired,
     home_use: input.homeUse,
     is_published: input.isPublished,
+    stock: Number(input.stock),
     updated_at: new Date().toISOString(),
   };
 }

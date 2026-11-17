@@ -7,6 +7,7 @@ import type { CatalogProduct } from "@/lib/shopify";
 const product: CatalogProduct = {
   id: "product-1",
   sku: "PM-12345678-1234-4234-8234-123456789abc",
+  stock: 1,
   title: "Κεραμικό μπολ",
   description: "Χειροποίητο",
   handle: "keramiko-mpol",

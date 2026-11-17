@@ -158,14 +158,18 @@ function Index() {
             <SelectTrigger id="category" className="w-56">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-background">
               {[ALL, ...categories].map((c) => {
                 const count =
                   c === ALL
                     ? (products.data?.length ?? 0)
                     : (products.data ?? []).filter((p) => p.productType === c).length;
                 return (
-                  <SelectItem key={c} value={c}>
+                  <SelectItem
+                    key={c}
+                    value={c}
+                    className="focus:bg-primary focus:text-primary-foreground"
+                  >
                     {c} ({count})
                   </SelectItem>
                 );

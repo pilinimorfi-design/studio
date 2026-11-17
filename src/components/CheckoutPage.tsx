@@ -15,6 +15,18 @@ import { formatPrice } from "@/lib/shopify";
 
 type PaymentMethod = "everypay" | "cod";
 type ShippingMethod = "boxnow" | "acs";
+type CheckoutField =
+  | "customerName"
+  | "email"
+  | "phone"
+  | "shippingAddress"
+  | "postalCode"
+  | "city"
+  | "village"
+  | "county"
+  | "shippingNotes"
+  | "locker";
+type CheckoutFieldErrors = Partial<Record<CheckoutField, string>>;
 
 export function CheckoutPage() {
   const items = useCartStore((state) => state.items);
@@ -25,10 +37,12 @@ export function CheckoutPage() {
   const [selectedLocker, setSelectedLocker] = useState<BoxNowLocker | null>(null);
   const [postalCode, setPostalCode] = useState("");
   const [city, setCity] = useState("");
+  const [village, setVillage] = useState("");
   const [county, setCounty] = useState("");
   const [postalCodeStatus, setPostalCodeStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<CheckoutFieldErrors>({});
   const simulationEnabled = import.meta.env.DEV;
   const cityWasEdited = useRef(false);
   const countyWasEdited = useRef(false);
@@ -37,9 +51,147 @@ export function CheckoutPage() {
     0,
   );
 
+  function getFieldError(
+    field: CheckoutField,
+    value: string,
+    municipality = city,
+    villageName = village,
+  ) {
+    const trimmed = value.trim();
+    switch (field) {
+      case "customerName":
+        return trimmed.length < 2 || trimmed.length > 150
+          ? "Το ονοματεπώνυμο πρέπει να έχει 2 έως 150 χαρακτήρες."
+          : "";
+      case "email":
+        return trimmed.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
+          ? "Μη έγκυρο email. Συμπληρώστε σωστά τη διεύθυνση email."
+          : "";
+      case "phone":
+        return /^\d{10}$/.test(trimmed) ? "" : "Συμπληρώστε σωστά τον 10ψήφιο αριθμό τηλεφώνου.";
+      case "shippingAddress":
+        return trimmed.length < 3 || trimmed.length > 300
+          ? "Η διεύθυνση πρέπει να έχει τουλάχιστον 3 και έως 300 χαρακτήρες."
+          : "";
+      case "postalCode":
+        return /^\d{5}$/.test(trimmed) ? "" : "Ο Τ.Κ. πρέπει να αποτελείται από 5 ψηφία.";
+      case "city":
+        if (trimmed.length < 2 || trimmed.length > 150) {
+          return "Ο Δήμος/Πόλη πρέπει να έχει 2 έως 150 χαρακτήρες.";
+        }
+        return municipality.trim().length + villageName.trim().length + 3 > 150
+          ? "Ο Δήμος/Πόλη και το Χωριό πρέπει να έχουν έως 150 χαρακτήρες συνολικά."
+          : "";
+      case "village":
+        if (trimmed.length < 2 || trimmed.length > 150) {
+          return "Το Χωριό πρέπει να έχει 2 έως 150 χαρακτήρες.";
+        }
+        return municipality.trim().length + trimmed.length + 3 > 150
+          ? "Ο Δήμος/Πόλη και το Χωριό πρέπει να έχουν έως 150 χαρακτήρες συνολικά."
+          : "";
+      case "county":
+        return trimmed.length > 150 ? "Ο Νομός πρέπει να έχει έως 150 χαρακτήρες." : "";
+      case "shippingNotes":
+        return trimmed.length > 1000 ? "Τα σχόλια πρέπει να έχουν έως 1000 χαρακτήρες." : "";
+      case "locker":
+        return trimmed ? "" : "Επιλέξτε πρώτα θυρίδα BoxNow.";
+    }
+    return "";
+  }
+
+  function validateField(field: CheckoutField, value: string) {
+    setFieldErrors((current) => ({
+      ...current,
+      [field]:
+        getFieldError(
+          field,
+          value,
+          field === "city" ? value : city,
+          field === "village" ? value : village,
+        ) || undefined,
+    }));
+  }
+
+  function updateFieldError(field: CheckoutField, value: string) {
+    if (!fieldErrors[field]) return;
+    setFieldErrors((current) => {
+      const municipality = field === "city" ? value : city;
+      const villageName = field === "village" ? value : village;
+      const next = {
+        ...current,
+        [field]: getFieldError(field, value, municipality, villageName) || undefined,
+      };
+      if (field === "city" || (fieldErrors.city && field === "village")) {
+        next.city = getFieldError("city", municipality, municipality, villageName) || undefined;
+      }
+      if (field === "village" || (fieldErrors.village && field === "city")) {
+        next.village =
+          getFieldError("village", villageName, municipality, villageName) || undefined;
+      }
+      return next;
+    });
+  }
+
+  function renderFieldError(field: CheckoutField) {
+    const message = fieldErrors[field];
+    return message ? (
+      <p id={`checkout-${field}-error`} role="alert" className="mt-1.5 text-sm text-destructive">
+        {message}
+      </p>
+    ) : null;
+  }
+
+  function getCheckoutErrorMessage(error: unknown) {
+    if (error instanceof Error && error.message.toLocaleLowerCase("el").includes("απόθεμα")) {
+      return "Το απόθεμα άλλαξε. Ενημερώστε το καλάθι και δοκιμάστε ξανά.";
+    }
+    return "Δεν ήταν δυνατή η δημιουργία της παραγγελίας. Ελέγξτε τα στοιχεία και δοκιμάστε ξανά.";
+  }
+
+  function getServerValidationErrors(error: unknown): CheckoutFieldErrors | null {
+    if (!(error instanceof Error)) return null;
+    try {
+      const details: unknown = JSON.parse(error.message);
+      if (!Array.isArray(details)) return null;
+      const fieldMap: Record<string, CheckoutField> = {
+        customerName: "customerName",
+        email: "email",
+        phone: "phone",
+        shippingAddress: "shippingAddress",
+        shippingPostalCode: "postalCode",
+        shippingCity: "city",
+        shippingCounty: "county",
+        shippingNotes: "shippingNotes",
+      };
+      const messages: Partial<Record<CheckoutField, string>> = {
+        customerName: "Ελέγξτε το ονοματεπώνυμο.",
+        email: "Μη έγκυρο email. Συμπληρώστε σωστά τη διεύθυνση email.",
+        phone: "Συμπληρώστε σωστά τον 10ψήφιο αριθμό τηλεφώνου.",
+        shippingAddress: "Η διεύθυνση πρέπει να έχει τουλάχιστον 3 χαρακτήρες.",
+        postalCode: "Ο Τ.Κ. πρέπει να αποτελείται από 5 ψηφία.",
+        city: "Ελέγξτε τον Δήμο/Πόλη και το Χωριό.",
+        county: "Ελέγξτε τον Νομό.",
+        shippingNotes: "Ελέγξτε τα σχόλια παράδοσης.",
+      };
+      const errors: CheckoutFieldErrors = {};
+      for (const issue of details) {
+        if (typeof issue !== "object" || issue === null || !("path" in issue)) continue;
+        const path = issue.path;
+        if (!Array.isArray(path)) continue;
+        const sourceField = path.find((part): part is string => typeof part === "string");
+        const field = sourceField ? fieldMap[sourceField] : undefined;
+        if (field && messages[field]) errors[field] = messages[field];
+      }
+      return Object.keys(errors).length ? errors : null;
+    } catch {
+      return null;
+    }
+  }
+
   async function submitSimulatedCheckout(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitError("");
+    setFieldErrors({});
     if (paymentMethod !== "everypay") {
       setSubmitError("Η προσομοίωση υποστηρίζει προσωρινά μόνο πληρωμή με κάρτα.");
       return;
@@ -48,48 +200,58 @@ export function CheckoutPage() {
       setSubmitError("Δεν βρέθηκε το ενεργό καλάθι. Ανανεώστε τη σελίδα και δοκιμάστε ξανά.");
       return;
     }
-    if (shippingMethod === "boxnow" && !selectedLocker) {
-      setSubmitError("Επιλέξτε πρώτα θυρίδα BoxNow.");
-      return;
-    }
-
     const formData = new FormData(event.currentTarget);
     const customerName = String(formData.get("customerName") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();
     const phone = String(formData.get("phone") ?? "").trim();
     const shippingAddress = String(formData.get("shippingAddress") ?? "").trim();
     const shippingNotes = String(formData.get("shippingNotes") ?? "").trim();
-    const shippingCity = city.trim();
+    const municipality = city.trim();
+    const villageName = village.trim();
+    const shippingCity = shippingMethod === "acs" ? `${municipality} / ${villageName}` : "";
     const shippingCounty = county.trim();
-
-    if (customerName.length < 2 || customerName.length > 150) {
-      setSubmitError("Το ονοματεπώνυμο πρέπει να έχει 2 έως 150 χαρακτήρες.");
-      return;
-    }
-    if (!email || email.length > 254) {
-      setSubmitError("Συμπληρώστε έγκυρη διεύθυνση email έως 254 χαρακτήρες.");
-      return;
-    }
-    if (phone.length < 7 || phone.length > 32) {
-      setSubmitError("Το τηλέφωνο πρέπει να έχει 7 έως 32 χαρακτήρες.");
-      return;
-    }
+    const errors: CheckoutFieldErrors = {};
+    const fieldValues: Array<[CheckoutField, string]> = [
+      ["customerName", customerName],
+      ["email", email],
+      ["phone", phone],
+    ];
     if (shippingMethod === "acs") {
-      if (shippingAddress.length < 3 || shippingAddress.length > 300) {
-        setSubmitError("Η διεύθυνση ACS πρέπει να έχει 3 έως 300 χαρακτήρες.");
-        return;
-      }
-      if (!/^\d{5}$/.test(postalCode)) {
-        setSubmitError("Ο ταχυδρομικός κώδικας ACS πρέπει να αποτελείται από 5 ψηφία.");
-        return;
-      }
-      if (shippingCity.length < 2 || shippingCity.length > 150) {
-        setSubmitError("Η πόλη ACS πρέπει να έχει 2 έως 150 χαρακτήρες.");
-        return;
-      }
+      fieldValues.push(
+        ["shippingAddress", shippingAddress],
+        ["postalCode", postalCode],
+        ["city", municipality],
+        ["village", villageName],
+        ["county", shippingCounty],
+      );
+    } else if (!selectedLocker) {
+      errors.locker = getFieldError("locker", "");
     }
-    if (shippingCounty.length > 150 || shippingNotes.length > 1000) {
-      setSubmitError("Ελέγξτε το μήκος του νομού ή των σχολίων παράδοσης.");
+    fieldValues.push(["shippingNotes", shippingNotes]);
+    for (const [field, value] of fieldValues) {
+      const message = getFieldError(field, value, municipality, villageName);
+      if (message) errors[field] = message;
+    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) {
+      const fieldIds: Partial<Record<CheckoutField, string>> = {
+        customerName: "checkout-name",
+        email: "checkout-email",
+        phone: "checkout-phone",
+        shippingAddress: "checkout-address",
+        postalCode: "checkout-postal-code",
+        city: "checkout-city",
+        village: "checkout-village",
+        county: "checkout-county",
+        shippingNotes: "checkout-delivery-notes",
+      };
+      const invalidField = Object.keys(errors)[0] as CheckoutField | undefined;
+      if (invalidField === "locker") {
+        document.getElementById("checkout-locker-picker")?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        const fieldId = invalidField ? fieldIds[invalidField] : undefined;
+        if (fieldId) document.getElementById(fieldId)?.focus();
+      }
       return;
     }
 
@@ -116,11 +278,9 @@ export function CheckoutPage() {
       clearLocalCart();
       window.location.assign(checkout.paymentUrl);
     } catch (error) {
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : "Δεν ήταν δυνατή η δημιουργία δοκιμαστικής παραγγελίας.",
-      );
+      const serverErrors = getServerValidationErrors(error);
+      if (serverErrors) setFieldErrors(serverErrors);
+      else setSubmitError(getCheckoutErrorMessage(error));
       setIsSubmitting(false);
     }
   }
@@ -133,13 +293,13 @@ export function CheckoutPage() {
 
     let active = true;
     const timeout = window.setTimeout(async () => {
-      setPostalCodeStatus("Αναζητείται Πόλη/Χωριό και Νομός…");
+      setPostalCodeStatus("Αναζητείται Δήμος/Πόλη και Νομός…");
       try {
         const address = await lookupGreekPostalCode({ data: postalCode });
         if (!active) return;
         if (!address) {
           setPostalCodeStatus(
-            "Δεν βρέθηκε αντιστοιχία. Συμπληρώστε Πόλη/Χωριό και Νομό χειροκίνητα.",
+            "Δεν βρέθηκε αντιστοιχία. Συμπληρώστε Δήμο/Πόλη, Χωριό και Νομό χειροκίνητα.",
           );
           return;
         }
@@ -150,18 +310,20 @@ export function CheckoutPage() {
         if (countyFilled) setCounty(address.county ?? "");
 
         if (cityFilled && countyFilled) {
-          setPostalCodeStatus("Η Πόλη/Χωριό και ο Νομός συμπληρώθηκαν αυτόματα.");
+          setPostalCodeStatus(
+            "Ο Δήμος/Πόλη και ο Νομός συμπληρώθηκαν αυτόματα. Συμπληρώστε το Χωριό.",
+          );
         } else if (cityFilled || countyFilled) {
           setPostalCodeStatus(
-            `Συμπληρώθηκε αυτόματα ${cityFilled ? "η Πόλη/Χωριό" : "ο Νομός"}. Ελέγξτε και συμπληρώστε τα υπόλοιπα πεδία.`,
+            `Συμπληρώθηκε αυτόματα ${cityFilled ? "ο Δήμος/Πόλη" : "ο Νομός"}. Ελέγξτε και συμπληρώστε τα υπόλοιπα πεδία, μαζί με το Χωριό.`,
           );
         } else {
-          setPostalCodeStatus("Ελέγξτε και, αν χρειάζεται, διορθώστε Πόλη/Χωριό και Νομό.");
+          setPostalCodeStatus("Ελέγξτε και, αν χρειάζεται, συμπληρώστε Δήμο/Πόλη, Χωριό και Νομό.");
         }
       } catch {
         if (active) {
           setPostalCodeStatus(
-            "Η αυτόματη αναζήτηση δεν ήταν διαθέσιμη. Συμπληρώστε Πόλη/Χωριό και Νομό χειροκίνητα.",
+            "Η αυτόματη αναζήτηση δεν ήταν διαθέσιμη. Συμπληρώστε Δήμο/Πόλη, Χωριό και Νομό χειροκίνητα.",
           );
         }
       }
@@ -215,6 +377,7 @@ export function CheckoutPage() {
           <h2 className="font-display text-2xl">Στοιχεία επισκέπτη</h2>
           <form
             className="mt-6 space-y-7"
+            noValidate
             onSubmit={(event) => void submitSimulatedCheckout(event)}
           >
             <div className="space-y-5">
@@ -222,7 +385,19 @@ export function CheckoutPage() {
                 <label htmlFor="checkout-name" className="mb-1.5 block text-sm font-medium">
                   Ονοματεπώνυμο
                 </label>
-                <Input id="checkout-name" name="customerName" autoComplete="name" required />
+                <Input
+                  id="checkout-name"
+                  name="customerName"
+                  autoComplete="name"
+                  required
+                  aria-invalid={Boolean(fieldErrors.customerName)}
+                  aria-describedby={
+                    fieldErrors.customerName ? "checkout-customerName-error" : undefined
+                  }
+                  onBlur={(event) => validateField("customerName", event.target.value)}
+                  onChange={(event) => updateFieldError("customerName", event.target.value)}
+                />
+                {renderFieldError("customerName")}
               </div>
               <div>
                 <label htmlFor="checkout-email" className="mb-1.5 block text-sm font-medium">
@@ -234,7 +409,12 @@ export function CheckoutPage() {
                   type="email"
                   autoComplete="email"
                   required
+                  aria-invalid={Boolean(fieldErrors.email)}
+                  aria-describedby={fieldErrors.email ? "checkout-email-error" : undefined}
+                  onBlur={(event) => validateField("email", event.target.value)}
+                  onChange={(event) => updateFieldError("email", event.target.value)}
                 />
+                {renderFieldError("email")}
               </div>
               <div>
                 <label htmlFor="checkout-phone" className="mb-1.5 block text-sm font-medium">
@@ -245,9 +425,14 @@ export function CheckoutPage() {
                   name="phone"
                   type="tel"
                   autoComplete="tel"
-                  inputMode="tel"
+                  inputMode="numeric"
                   required
+                  aria-invalid={Boolean(fieldErrors.phone)}
+                  aria-describedby={fieldErrors.phone ? "checkout-phone-error" : undefined}
+                  onBlur={(event) => validateField("phone", event.target.value)}
+                  onChange={(event) => updateFieldError("phone", event.target.value)}
                 />
+                {renderFieldError("phone")}
               </div>
             </div>
 
@@ -259,6 +444,7 @@ export function CheckoutPage() {
                   if (value === "boxnow" || value === "acs") {
                     setShippingMethod(value);
                     if (value !== "boxnow") setSelectedLocker(null);
+                    setFieldErrors((current) => ({ ...current, locker: undefined }));
                   }
                 }}
                 className="mt-3"
@@ -296,73 +482,64 @@ export function CheckoutPage() {
               <fieldset className="space-y-5">
                 <legend className="font-display text-xl">Διεύθυνση παράδοσης</legend>
                 <div>
-                  <label htmlFor="checkout-address" className="mb-1.5 block text-sm font-medium">
-                    Οδός και αριθμός
+                  <label
+                    htmlFor="checkout-postal-code"
+                    className="mb-1.5 block text-sm font-medium"
+                  >
+                    Ταχυδρομικός κώδικας
                   </label>
                   <Input
-                    id="checkout-address"
-                    name="shippingAddress"
-                    autoComplete="street-address"
+                    id="checkout-postal-code"
+                    autoComplete="postal-code"
+                    inputMode="numeric"
+                    maxLength={5}
+                    pattern="[0-9]{5}"
                     required
+                    className="sm:max-w-[calc(50%-0.625rem)]"
+                    value={postalCode}
+                    aria-invalid={Boolean(fieldErrors.postalCode)}
+                    aria-describedby={
+                      fieldErrors.postalCode ? "checkout-postalCode-error" : undefined
+                    }
+                    onBlur={(event) => validateField("postalCode", event.target.value)}
+                    onChange={(event) => {
+                      const value = event.target.value.replace(/\D/g, "").slice(0, 5);
+                      setPostalCode(value);
+                      updateFieldError("postalCode", value);
+                      setCity("");
+                      setVillage("");
+                      setCounty("");
+                      setFieldErrors((current) => ({
+                        ...current,
+                        postalCode: current.postalCode
+                          ? getFieldError("postalCode", value) || undefined
+                          : undefined,
+                        city: undefined,
+                        village: undefined,
+                        county: undefined,
+                      }));
+                      cityWasEdited.current = false;
+                      countyWasEdited.current = false;
+                    }}
                   />
-                </div>
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div>
-                    <label
-                      htmlFor="checkout-postal-code"
-                      className="mb-1.5 block text-sm font-medium"
+                  {renderFieldError("postalCode")}
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Η αναζήτηση περιοχής παρέχεται από{" "}
+                    <a
+                      href="https://www.openstreetmap.org/copyright"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline underline-offset-2"
                     >
-                      Ταχυδρομικός κώδικας
-                    </label>
-                    <Input
-                      id="checkout-postal-code"
-                      autoComplete="postal-code"
-                      inputMode="numeric"
-                      maxLength={5}
-                      pattern="[0-9]{5}"
-                      required
-                      value={postalCode}
-                      onChange={(event) => {
-                        setPostalCode(event.target.value.replace(/\D/g, "").slice(0, 5));
-                        setCity("");
-                        setCounty("");
-                        cityWasEdited.current = false;
-                        countyWasEdited.current = false;
-                      }}
-                    />
-                    <p className="mt-1.5 text-xs text-muted-foreground">
-                      Η αναζήτηση περιοχής παρέχεται από{" "}
-                      <a
-                        href="https://www.openstreetmap.org/copyright"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="underline underline-offset-2"
-                      >
-                        OpenStreetMap
-                      </a>
-                      .
+                      OpenStreetMap
+                    </a>
+                    .
+                  </p>
+                  {postalCodeStatus && (
+                    <p role="status" className="mt-1.5 text-xs text-muted-foreground">
+                      {postalCodeStatus}
                     </p>
-                    {postalCodeStatus && (
-                      <p role="status" className="mt-1.5 text-xs text-muted-foreground">
-                        {postalCodeStatus}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="checkout-city" className="mb-1.5 block text-sm font-medium">
-                      Πόλη/Χωριό
-                    </label>
-                    <Input
-                      id="checkout-city"
-                      autoComplete="address-level2"
-                      required
-                      value={city}
-                      onChange={(event) => {
-                        cityWasEdited.current = true;
-                        setCity(event.target.value);
-                      }}
-                    />
-                  </div>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="checkout-county" className="mb-1.5 block text-sm font-medium">
@@ -372,11 +549,76 @@ export function CheckoutPage() {
                     id="checkout-county"
                     autoComplete="address-level1"
                     value={county}
+                    aria-invalid={Boolean(fieldErrors.county)}
+                    aria-describedby={fieldErrors.county ? "checkout-county-error" : undefined}
+                    onBlur={(event) => validateField("county", event.target.value)}
                     onChange={(event) => {
                       countyWasEdited.current = true;
                       setCounty(event.target.value);
+                      updateFieldError("county", event.target.value);
                     }}
                   />
+                  {renderFieldError("county")}
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="checkout-city" className="mb-1.5 block text-sm font-medium">
+                      Δήμος/Πόλη
+                    </label>
+                    <Input
+                      id="checkout-city"
+                      autoComplete="address-level2"
+                      required
+                      value={city}
+                      aria-invalid={Boolean(fieldErrors.city)}
+                      aria-describedby={fieldErrors.city ? "checkout-city-error" : undefined}
+                      onBlur={(event) => validateField("city", event.target.value)}
+                      onChange={(event) => {
+                        cityWasEdited.current = true;
+                        setCity(event.target.value);
+                        updateFieldError("city", event.target.value);
+                      }}
+                    />
+                    {renderFieldError("city")}
+                  </div>
+                  <div>
+                    <label htmlFor="checkout-village" className="mb-1.5 block text-sm font-medium">
+                      Χωριό
+                    </label>
+                    <Input
+                      id="checkout-village"
+                      autoComplete="address-level3"
+                      placeholder="π.χ. Μπολάτι"
+                      required
+                      value={village}
+                      aria-invalid={Boolean(fieldErrors.village)}
+                      aria-describedby={fieldErrors.village ? "checkout-village-error" : undefined}
+                      onBlur={(event) => validateField("village", event.target.value)}
+                      onChange={(event) => {
+                        setVillage(event.target.value);
+                        updateFieldError("village", event.target.value);
+                      }}
+                    />
+                    {renderFieldError("village")}
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="checkout-address" className="mb-1.5 block text-sm font-medium">
+                    Οδός και αριθμός
+                  </label>
+                  <Input
+                    id="checkout-address"
+                    name="shippingAddress"
+                    autoComplete="street-address"
+                    required
+                    aria-invalid={Boolean(fieldErrors.shippingAddress)}
+                    aria-describedby={
+                      fieldErrors.shippingAddress ? "checkout-shippingAddress-error" : undefined
+                    }
+                    onBlur={(event) => validateField("shippingAddress", event.target.value)}
+                    onChange={(event) => updateFieldError("shippingAddress", event.target.value)}
+                  />
+                  {renderFieldError("shippingAddress")}
                 </div>
                 <div>
                   <label
@@ -390,13 +632,28 @@ export function CheckoutPage() {
                     name="shippingNotes"
                     placeholder="Πρόσθεσε σχόλια παράδοσης"
                     autoComplete="off"
+                    aria-invalid={Boolean(fieldErrors.shippingNotes)}
+                    aria-describedby={
+                      fieldErrors.shippingNotes ? "checkout-shippingNotes-error" : undefined
+                    }
+                    onBlur={(event) => validateField("shippingNotes", event.target.value)}
+                    onChange={(event) => updateFieldError("shippingNotes", event.target.value)}
                   />
+                  {renderFieldError("shippingNotes")}
                 </div>
               </fieldset>
             ) : (
               <div className="rounded-md border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
                 <p className="mb-3">Επιλέξτε το locker από τον χάρτη BoxNow.</p>
-                <BoxNowLockerPicker onSelect={setSelectedLocker} />
+                <div id="checkout-locker-picker">
+                  <BoxNowLockerPicker
+                    onSelect={(locker) => {
+                      setSelectedLocker(locker);
+                      setFieldErrors((current) => ({ ...current, locker: undefined }));
+                    }}
+                  />
+                  {renderFieldError("locker")}
+                </div>
                 {selectedLocker && (
                   <p role="status" className="mt-3 text-foreground">
                     Επιλεγμένο locker: {selectedLocker.name}

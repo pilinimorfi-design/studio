@@ -56,8 +56,10 @@ function ProductPage() {
     try {
       await addItem(p);
       toast.success("Προστέθηκε στο καλάθι", { description: p.title });
-    } catch {
-      toast.error("Δεν ήταν δυνατή η προσθήκη στο καλάθι.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Δεν ήταν δυνατή η προσθήκη στο καλάθι.",
+      );
     }
   }
 
@@ -65,8 +67,10 @@ function ProductPage() {
     try {
       await addItem(p);
       navigate({ to: "/checkout" });
-    } catch {
-      toast.error("Δεν ήταν δυνατή η προσθήκη στο καλάθι.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Δεν ήταν δυνατή η προσθήκη στο καλάθι.",
+      );
     }
   }
 
@@ -96,11 +100,18 @@ function ProductPage() {
             {p.productType && <>Κατηγορία: {p.productType}</>}
             {" · "}Κωδικός: {p.sku}
           </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {p.stock > 0 ? `Απόθεμα: ${p.stock} τεμάχια` : "Εξαντλημένο"}
+          </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button size="lg" onClick={() => void addToCart()} disabled={cartLoading}>
+            <Button
+              size="lg"
+              onClick={() => void addToCart()}
+              disabled={cartLoading || p.stock <= 0}
+            >
               Προσθήκη στο καλάθι
             </Button>
-            <Button size="lg" className="h-9" onClick={() => void buyNow()} disabled={cartLoading}>
+            <Button size="lg" onClick={() => void buyNow()} disabled={cartLoading || p.stock <= 0}>
               Αγορά Τώρα
             </Button>
           </div>

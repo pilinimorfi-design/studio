@@ -26,6 +26,7 @@ import type { CatalogProduct } from "@/lib/shopify";
 const product: CatalogProduct = {
   id: "product-1",
   sku: "PM-12345678-1234-4234-8234-123456789abc",
+  stock: 1,
   title: "Πήλινο Μπολ",
   description: "Χειροποίητο κεραμικό μπολ",
   handle: "pihino-mpol",
@@ -51,8 +52,8 @@ describe("ProductCard — δημόσιος κατάλογος Supabase", () => {
 
     expect(screen.getByText("Πήλινο Μπολ")).toBeInTheDocument();
     expect(screen.getByText("Χειροποίητο κεραμικό μπολ")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Προσθήκη στο καλάθι" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Αγορά Τώρα" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Προσθήκη στο καλάθι" })).toHaveClass("bg-primary");
+    expect(screen.getByRole("button", { name: "Αγορά Τώρα" })).toHaveClass("bg-primary", "h-8");
   });
 
   it("adds the product and navigates to checkout when buying now", async () => {
@@ -64,5 +65,12 @@ describe("ProductCard — δημόσιος κατάλογος Supabase", () => {
       expect(productCardMocks.addItem).toHaveBeenCalledWith(product);
       expect(productCardMocks.navigate).toHaveBeenCalledWith({ to: "/checkout" });
     });
+  });
+
+  it("disables purchase actions when the product has no stock", () => {
+    render(<ProductCard product={{ ...product, stock: 0 }} />);
+
+    expect(screen.getByRole("button", { name: "Προσθήκη στο καλάθι" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Αγορά Τώρα" })).toBeDisabled();
   });
 });

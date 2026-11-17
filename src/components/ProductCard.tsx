@@ -16,8 +16,10 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
     try {
       await addItem(product);
       toast.success("Προστέθηκε στο καλάθι", { description: product.title });
-    } catch {
-      toast.error("Δεν ήταν δυνατή η προσθήκη στο καλάθι.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Δεν ήταν δυνατή η προσθήκη στο καλάθι.",
+      );
     }
   }
 
@@ -25,8 +27,10 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
     try {
       await addItem(product);
       navigate({ to: "/checkout" });
-    } catch {
-      toast.error("Δεν ήταν δυνατή η προσθήκη στο καλάθι.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Δεν ήταν δυνατή η προσθήκη στο καλάθι.",
+      );
     }
   }
 
@@ -73,18 +77,18 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           <ProductAttributes product={product} compact />
         </div>
         <Button
-          variant="outline"
+          variant="default"
           className="relative z-10 mt-4"
           onClick={() => void addToCart()}
-          disabled={isLoading}
+          disabled={isLoading || product.stock <= 0}
         >
           Προσθήκη στο καλάθι
         </Button>
         <Button
-          variant="outline"
+          variant="default"
           className="relative z-10 mt-1 h-8"
           onClick={() => void buyNow()}
-          disabled={isLoading}
+          disabled={isLoading || product.stock <= 0}
         >
           Αγορά Τώρα
         </Button>

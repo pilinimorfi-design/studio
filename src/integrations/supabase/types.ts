@@ -67,6 +67,7 @@ export type Database = {
           price: number;
           product_type: string;
           sku: string;
+          stock: number;
           title: string;
           updated_at: string;
           weight_grams: number | null;
@@ -87,6 +88,7 @@ export type Database = {
           price: number;
           product_type?: string;
           sku?: string;
+          stock?: number;
           title: string;
           updated_at?: string;
           weight_grams?: number | null;
@@ -107,6 +109,7 @@ export type Database = {
           price?: number;
           product_type?: string;
           sku?: string;
+          stock?: number;
           title?: string;
           updated_at?: string;
           weight_grams?: number | null;
@@ -339,6 +342,14 @@ export type Database = {
     Functions: {
       add_cart_item: {
         Args: { p_cart_token_hash: string; p_product_id: string; p_quantity: number };
+        Returns: undefined;
+      };
+      update_cart_item_quantity: {
+        Args: { p_cart_token_hash: string; p_product_id: string; p_quantity: number };
+        Returns: undefined;
+      };
+      resolve_simulated_order_payment: {
+        Args: { p_order_id: string; p_successful: boolean };
         Returns: undefined;
       };
       create_guest_order: {

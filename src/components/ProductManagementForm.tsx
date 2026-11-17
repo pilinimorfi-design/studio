@@ -31,6 +31,7 @@ const emptyForm = () => ({
   title: "",
   description: "",
   price: "",
+  stock: "1",
   categoryId: "",
   imageUrl: "",
   dimensions: "",
@@ -153,6 +154,7 @@ export function ProductManagementForm() {
       title: product.title,
       description: product.description,
       price: product.price.amount,
+      stock: String(product.stock),
       categoryId,
       imageUrl: product.imageUrl ?? "",
       dimensions: product.dimensions ?? "",
@@ -295,6 +297,19 @@ export function ProductManagementForm() {
                   />
                 </div>
                 <div>
+                  <FieldLabel htmlFor="product-stock">Απόθεμα (τεμάχια)</FieldLabel>
+                  <Input
+                    id="product-stock"
+                    type="number"
+                    min="0"
+                    max="999999"
+                    step="1"
+                    value={form.stock}
+                    onChange={(event) => setForm({ ...form, stock: event.target.value })}
+                    required
+                  />
+                </div>
+                <div>
                   <FieldLabel htmlFor="product-category">Κατηγορία</FieldLabel>
                   <Select
                     value={form.categoryId}
@@ -417,10 +432,10 @@ export function ProductManagementForm() {
                 </label>
               </fieldset>
               <div>
-                <FieldLabel htmlFor="product-sku">Μοναδικός κωδικός SKU</FieldLabel>
+                <FieldLabel htmlFor="product-sku">Μοναδικός κωδικός προϊόντος (SKU)</FieldLabel>
                 <Input id="product-sku" value={sku} readOnly className="font-mono" />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Ο κωδικός αποθηκεύεται μαζί με το προϊόν και είναι μοναδικός στη βάση.
+                  Δημιουργείται αυτόματα και είναι μοναδικός για κάθε προϊόν.
                 </p>
               </div>
               <label className="flex items-center gap-2 text-sm">
@@ -493,7 +508,8 @@ export function ProductManagementForm() {
                       <p className="truncate font-medium">{product.title}</p>
                       <p className="mt-1 text-sm text-muted-foreground">
                         {formatPrice(product.price.amount, product.price.currencyCode)} ·{" "}
-                        {product.isPublished ? "Δημοσιευμένο" : "Πρόχειρο"}
+                        {product.isPublished ? "Δημοσιευμένο" : "Πρόχειρο"} · Απόθεμα:{" "}
+                        {product.stock}
                       </p>
                       <p className="text-xs text-muted-foreground">{product.sku}</p>
                     </div>

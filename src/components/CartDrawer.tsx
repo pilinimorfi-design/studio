@@ -30,7 +30,12 @@ export function CartDrawer() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label="Καλάθι">
+        <Button
+          variant="outline"
+          size="icon"
+          className="relative bg-background hover:bg-primary hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
+          aria-label="Καλάθι"
+        >
           <ShoppingBag className="size-5" />
           {totalItems > 0 && (
             <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
@@ -79,7 +84,7 @@ export function CartDrawer() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-6"
+                      className="size-6 hover:bg-primary active:brightness-110"
                       onClick={() => void removeItem(product.id).catch(() => undefined)}
                       disabled={isLoading}
                       aria-label={`Αφαίρεση ${product.title}`}
@@ -90,7 +95,7 @@ export function CartDrawer() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="size-6"
+                        className="size-6 bg-background hover:bg-primary hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
                         onClick={() =>
                           void updateQuantity(product.id, quantity - 1).catch(() => undefined)
                         }
@@ -99,15 +104,17 @@ export function CartDrawer() {
                       >
                         <Minus className="size-3" />
                       </Button>
-                      <span className="w-6 text-center text-sm">{quantity}</span>
+                      <span className="w-6 text-center text-sm" aria-live="polite">
+                        {quantity}
+                      </span>
                       <Button
                         variant="outline"
                         size="icon"
-                        className="size-6"
+                        className="size-6 bg-background hover:bg-primary hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
                         onClick={() =>
                           void updateQuantity(product.id, quantity + 1).catch(() => undefined)
                         }
-                        disabled={isLoading || quantity >= 20}
+                        disabled={isLoading || quantity >= Math.min(product.stock, 20)}
                         aria-label="Αύξηση ποσότητας"
                       >
                         <Plus className="size-3" />
