@@ -50,6 +50,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      special_order_inquiries: {
+        Row: {
+          created_at: string;
+          delivery_window: string;
+          email: string;
+          full_name: string;
+          id: string;
+          phone: string;
+          quantity: number;
+          technical_details: string;
+        };
+        Insert: {
+          created_at?: string;
+          delivery_window: string;
+          email: string;
+          full_name: string;
+          id?: string;
+          phone: string;
+          quantity: number;
+          technical_details: string;
+        };
+        Update: {
+          created_at?: string;
+          delivery_window?: string;
+          email?: string;
+          full_name?: string;
+          id?: string;
+          phone?: string;
+          quantity?: number;
+          technical_details?: string;
+        };
+        Relationships: [];
+      };
       products: {
         Row: {
           care: string | null;

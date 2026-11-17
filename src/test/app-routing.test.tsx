@@ -39,6 +39,14 @@ describe("App routing", () => {
     expect(matches.at(-1)?.routeId).toBe("/seminar-terms");
   });
 
+  it("matches the special orders page", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/special-orders");
+
+    expect(matches.at(-1)?.routeId).toBe("/special-orders");
+  });
+
   it("matches the product management page", () => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
 

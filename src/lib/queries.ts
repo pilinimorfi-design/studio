@@ -42,6 +42,10 @@ export const contactQuery = queryOptions({
   queryKey: ["content", "contact"],
   queryFn: () => siteContent.getContact(),
 });
+export const specialOrdersQuery = queryOptions({
+  queryKey: ["content", "special-orders"],
+  queryFn: () => siteContent.getSpecialOrders(),
+});
 export const termsQuery = queryOptions({
   queryKey: ["content", "terms"],
   queryFn: () => siteContent.getTerms(),

@@ -25,6 +25,9 @@ export function SiteFooter() {
           <Link to="/contact" className="opacity-75 hover:opacity-100">
             Επικοινωνία
           </Link>
+          <Link to="/special-orders" className="opacity-75 hover:opacity-100">
+            Ειδικές Παραγγελίες
+          </Link>
           <Link to="/terms" className="opacity-75 hover:opacity-100">
             Όροι Χρήσης
           </Link>

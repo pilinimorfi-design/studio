@@ -19,6 +19,7 @@ import { Route as OrderConfirmationRouteImport } from './routes/order-confirmati
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SeminarTermsRouteImport } from './routes/seminar-terms'
 import { Route as SeminarsRouteImport } from './routes/seminars'
+import { Route as SpecialOrdersRouteImport } from './routes/special-orders'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as ProductHandleRouteImport } from './routes/product.$handle'
@@ -73,6 +74,11 @@ const SeminarsRoute = SeminarsRouteImport.update({
   path: '/seminars',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpecialOrdersRoute = SpecialOrdersRouteImport.update({
+  id: '/special-orders',
+  path: '/special-orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/seminar-terms': typeof SeminarTermsRoute
   '/seminars': typeof SeminarsRoute
+  '/special-orders': typeof SpecialOrdersRoute
   '/terms': typeof TermsRoute
   '/admin/products': typeof AdminProductsRoute
   '/product/$handle': typeof ProductHandleRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/seminar-terms': typeof SeminarTermsRoute
   '/seminars': typeof SeminarsRoute
+  '/special-orders': typeof SpecialOrdersRoute
   '/terms': typeof TermsRoute
   '/admin/products': typeof AdminProductsRoute
   '/product/$handle': typeof ProductHandleRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/seminar-terms': typeof SeminarTermsRoute
   '/seminars': typeof SeminarsRoute
+  '/special-orders': typeof SpecialOrdersRoute
   '/terms': typeof TermsRoute
   '/admin/products': typeof AdminProductsRoute
   '/product/$handle': typeof ProductHandleRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/seminar-terms'
     | '/seminars'
+    | '/special-orders'
     | '/terms'
     | '/admin/products'
     | '/product/$handle'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/seminar-terms'
     | '/seminars'
+    | '/special-orders'
     | '/terms'
     | '/admin/products'
     | '/product/$handle'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/seminar-terms'
     | '/seminars'
+    | '/special-orders'
     | '/terms'
     | '/admin/products'
     | '/product/$handle'
@@ -194,6 +206,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   SeminarTermsRoute: typeof SeminarTermsRoute
   SeminarsRoute: typeof SeminarsRoute
+  SpecialOrdersRoute: typeof SpecialOrdersRoute
   TermsRoute: typeof TermsRoute
   AdminProductsRoute: typeof AdminProductsRoute
   ProductHandleRoute: typeof ProductHandleRoute
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SeminarsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/special-orders': {
+      id: '/special-orders'
+      path: '/special-orders'
+      fullPath: '/special-orders'
+      preLoaderRoute: typeof SpecialOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -306,6 +326,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   SeminarTermsRoute: SeminarTermsRoute,
   SeminarsRoute: SeminarsRoute,
+  SpecialOrdersRoute: SpecialOrdersRoute,
   TermsRoute: TermsRoute,
   AdminProductsRoute: AdminProductsRoute,
   ProductHandleRoute: ProductHandleRoute,
