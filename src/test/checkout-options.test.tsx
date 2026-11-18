@@ -184,32 +184,41 @@ describe("Checkout options", () => {
         }),
       ),
     );
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Μη έγκυρο email. Συμπληρώστε σωστά τη διεύθυνση email.",
-    );
+    expect(await screen.findByRole("alert")).toHaveTextContent("Γράψτε ένα έγκυρο email.");
   });
 
   it("shows field-specific validation as soon as the customer leaves a field", () => {
     render(<CheckoutPage />);
 
+    const name = screen.getByLabelText("Ονοματεπώνυμο");
+    fireEvent.blur(name);
+    expect(screen.getByText("Γράψτε το ονοματεπώνυμό σας.")).toBeVisible();
+
     const email = screen.getByLabelText("Email");
     fireEvent.change(email, { target: { value: "invalid" } });
     fireEvent.blur(email);
-    expect(
-      screen.getByText("Μη έγκυρο email. Συμπληρώστε σωστά τη διεύθυνση email."),
-    ).toBeVisible();
+    expect(screen.getByText("Γράψτε ένα έγκυρο email.")).toBeVisible();
 
     const phone = screen.getByLabelText("Τηλέφωνο επικοινωνίας");
     fireEvent.change(phone, { target: { value: "12345" } });
     fireEvent.blur(phone);
-    expect(screen.getByText("Συμπληρώστε σωστά τον 10ψήφιο αριθμό τηλεφώνου.")).toBeVisible();
+    expect(screen.getByText("Το τηλέφωνο πρέπει να έχει 10 ψηφία.")).toBeVisible();
 
     fireEvent.click(screen.getByRole("radio", { name: /ACS Courier/ }));
+    const postalCode = screen.getByLabelText("Ταχυδρομικός κώδικας");
+    fireEvent.blur(postalCode);
+    expect(screen.getByText("Γράψτε έγκυρο ΤΚ")).toBeVisible();
+
+    const municipality = screen.getByLabelText("Δήμος");
+    fireEvent.blur(municipality);
+    expect(screen.getByText("Συμπληρώστε τον Δήμο")).toBeVisible();
+
+    const city = screen.getByLabelText("Πόλη");
+    fireEvent.blur(city);
+    expect(screen.getByText("Συμπληρώστε την Πόλη")).toBeVisible();
+
     const address = screen.getByLabelText("Οδός και αριθμός");
-    fireEvent.change(address, { target: { value: "12" } });
     fireEvent.blur(address);
-    expect(
-      screen.getByText("Η διεύθυνση πρέπει να έχει τουλάχιστον 3 και έως 300 χαρακτήρες."),
-    ).toBeVisible();
+    expect(screen.getByText("Γράψτε Διεύθυνση")).toBeVisible();
   });
 });

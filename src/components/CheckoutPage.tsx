@@ -88,34 +88,30 @@ export function CheckoutPage() {
     const trimmed = value.trim();
     switch (field) {
       case "customerName":
-        return trimmed.length < 2 || trimmed.length > 150
-          ? "Το ονοματεπώνυμο πρέπει να έχει 2 έως 150 χαρακτήρες."
-          : "";
+        return trimmed.length < 2 || trimmed.length > 150 ? "Γράψτε το ονοματεπώνυμό σας." : "";
       case "email":
         return trimmed.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
-          ? "Μη έγκυρο email. Συμπληρώστε σωστά τη διεύθυνση email."
+          ? "Γράψτε ένα έγκυρο email."
           : "";
       case "phone":
-        return /^\d{10}$/.test(trimmed) ? "" : "Συμπληρώστε σωστά τον 10ψήφιο αριθμό τηλεφώνου.";
+        return /^\d{10}$/.test(trimmed) ? "" : "Το τηλέφωνο πρέπει να έχει 10 ψηφία.";
       case "shippingAddress":
-        return trimmed.length < 3 || trimmed.length > 300
-          ? "Η διεύθυνση πρέπει να έχει τουλάχιστον 3 και έως 300 χαρακτήρες."
-          : "";
+        return trimmed.length < 3 || trimmed.length > 300 ? "Γράψτε Διεύθυνση" : "";
       case "postalCode":
-        return /^\d{5}$/.test(trimmed) ? "" : "Ο Τ.Κ. πρέπει να αποτελείται από 5 ψηφία.";
+        return /^\d{5}$/.test(trimmed) ? "" : "Γράψτε έγκυρο ΤΚ";
       case "city":
         if (trimmed.length < 2 || trimmed.length > 150) {
-          return "Ο Δήμος/Πόλη πρέπει να έχει 2 έως 150 χαρακτήρες.";
+          return "Συμπληρώστε τον Δήμο";
         }
         return municipality.trim().length + villageName.trim().length + 3 > 150
-          ? "Ο Δήμος/Πόλη και το Χωριό πρέπει να έχουν έως 150 χαρακτήρες συνολικά."
+          ? "Ο Δήμος και η Πόλη πρέπει να έχουν έως 150 χαρακτήρες συνολικά."
           : "";
       case "village":
         if (trimmed.length < 2 || trimmed.length > 150) {
-          return "Το Χωριό πρέπει να έχει 2 έως 150 χαρακτήρες.";
+          return "Συμπληρώστε την Πόλη";
         }
         return municipality.trim().length + trimmed.length + 3 > 150
-          ? "Ο Δήμος/Πόλη και το Χωριό πρέπει να έχουν έως 150 χαρακτήρες συνολικά."
+          ? "Ο Δήμος και η Πόλη πρέπει να έχουν έως 150 χαρακτήρες συνολικά."
           : "";
       case "county":
         return trimmed.length > 150 ? "Ο Νομός πρέπει να έχει έως 150 χαρακτήρες." : "";
@@ -192,12 +188,12 @@ export function CheckoutPage() {
         shippingNotes: "shippingNotes",
       };
       const messages: Partial<Record<CheckoutField, string>> = {
-        customerName: "Ελέγξτε το ονοματεπώνυμο.",
-        email: "Μη έγκυρο email. Συμπληρώστε σωστά τη διεύθυνση email.",
-        phone: "Συμπληρώστε σωστά τον 10ψήφιο αριθμό τηλεφώνου.",
-        shippingAddress: "Η διεύθυνση πρέπει να έχει τουλάχιστον 3 χαρακτήρες.",
-        postalCode: "Ο Τ.Κ. πρέπει να αποτελείται από 5 ψηφία.",
-        city: "Ελέγξτε τον Δήμο/Πόλη και το Χωριό.",
+        customerName: "Γράψτε το ονοματεπώνυμό σας.",
+        email: "Γράψτε ένα έγκυρο email.",
+        phone: "Το τηλέφωνο πρέπει να έχει 10 ψηφία.",
+        shippingAddress: "Γράψτε Διεύθυνση",
+        postalCode: "Γράψτε έγκυρο ΤΚ",
+        city: "Συμπληρώστε τον Δήμο και την Πόλη.",
         county: "Ελέγξτε τον Νομό.",
         shippingNotes: "Ελέγξτε τα σχόλια παράδοσης.",
       };
