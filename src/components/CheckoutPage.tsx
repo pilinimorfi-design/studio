@@ -637,7 +637,7 @@ export function CheckoutPage() {
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
                     <label htmlFor="checkout-city" className="mb-1.5 block text-sm font-medium">
-                      Δήμος/Πόλη
+                      Δήμος
                     </label>
                     <Input
                       id="checkout-city"
@@ -657,7 +657,7 @@ export function CheckoutPage() {
                   </div>
                   <div>
                     <label htmlFor="checkout-village" className="mb-1.5 block text-sm font-medium">
-                      Χωριό
+                      Πόλη
                     </label>
                     <Input
                       id="checkout-village"

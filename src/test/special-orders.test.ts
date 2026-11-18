@@ -16,20 +16,23 @@ describe("special order inquiry validation", () => {
     expect(specialOrderSchema.safeParse(validInput).success).toBe(true);
   });
 
-  it("rejects invalid email, quantity, and incomplete technical details", () => {
+  it("rejects invalid email and quantity", () => {
     const result = specialOrderSchema.safeParse({
       ...validInput,
       email: "not-an-email",
       quantity: 19,
-      technicalDetails: "λίγο",
     });
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues.map((issue) => issue.path[0])).toEqual(
-        expect.arrayContaining(["email", "quantity", "technicalDetails"]),
-      );
+      expect(result.error.issues.map((issue) => issue.path[0])).toEqual(["email", "quantity"]);
     }
+  });
+
+  it("accepts an inquiry without technical details", () => {
+    expect(specialOrderSchema.safeParse({ ...validInput, technicalDetails: "" }).success).toBe(
+      true,
+    );
   });
 
   it("requires a minimum quantity of 20", () => {

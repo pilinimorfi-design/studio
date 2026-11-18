@@ -92,8 +92,8 @@ describe("Checkout options", () => {
     expect(screen.getByLabelText("Νομός")).toBeInTheDocument();
     const postalCode = screen.getByLabelText("Ταχυδρομικός κώδικας");
     const county = screen.getByLabelText("Νομός");
-    const municipality = screen.getByLabelText("Δήμος/Πόλη");
-    const village = screen.getByLabelText("Χωριό");
+    const municipality = screen.getByLabelText("Δήμος");
+    const village = screen.getByLabelText("Πόλη");
     const street = screen.getByLabelText("Οδός και αριθμός");
     expect(
       postalCode.compareDocumentPosition(county) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -101,7 +101,7 @@ describe("Checkout options", () => {
     expect(
       county.compareDocumentPosition(municipality) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    expect(municipality.closest(".grid")).toBe(village.closest(".grid"));
+    expect(municipality.parentElement).not.toBe(village.parentElement);
     expect(village.compareDocumentPosition(street) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(postalCode).toHaveClass("sm:max-w-[calc(50%-0.625rem)]");
     expect(screen.getByLabelText("Σχόλια παράδοσης")).toHaveAttribute(
@@ -114,8 +114,8 @@ describe("Checkout options", () => {
     await waitFor(() =>
       expect(checkoutMocks.postalCodeLookup).toHaveBeenCalledWith({ data: "10558" }),
     );
-    expect(await screen.findByLabelText("Δήμος/Πόλη")).toHaveValue("Αθήνα");
-    expect(screen.getByLabelText("Χωριό")).toBeRequired();
+    expect(await screen.findByLabelText("Δήμος")).toHaveValue("Αθήνα");
+    expect(screen.getByLabelText("Πόλη")).toBeRequired();
     expect(screen.getByLabelText("Νομός")).toHaveValue("Κεντρικός Τομέας Αθηνών");
 
     fireEvent.change(screen.getByLabelText("Νομός"), {
@@ -127,15 +127,15 @@ describe("Checkout options", () => {
 
     expect(screen.getByLabelText("Οδός και αριθμός")).toBeRequired();
     expect(screen.getByLabelText("Ταχυδρομικός κώδικας")).toBeRequired();
-    expect(screen.getByLabelText("Δήμος/Πόλη")).toBeRequired();
-    expect(screen.getByLabelText("Χωριό")).toBeRequired();
+    expect(screen.getByLabelText("Δήμος")).toBeRequired();
+    expect(screen.getByLabelText("Πόλη")).toBeRequired();
     expect(screen.getByRole("radio", { name: /Αντικαταβολή/ })).toBeChecked();
     expect(
       screen.getByRole("button", { name: /Η αντικαταβολή δεν προσομοιώνεται/ }),
     ).toBeDisabled();
   });
 
-  it("combines municipality and required village and translates server validation errors", async () => {
+  it("combines municipality and required city and translates server validation errors", async () => {
     checkoutMocks.postalCodeLookup.mockResolvedValue({
       city: "Αθήνα",
       county: "Κεντρικός Τομέας Αθηνών",
@@ -171,7 +171,7 @@ describe("Checkout options", () => {
       target: { value: "10558" },
     });
     await screen.findByDisplayValue("Αθήνα");
-    fireEvent.change(screen.getByLabelText("Χωριό"), {
+    fireEvent.change(screen.getByLabelText("Πόλη"), {
       target: { value: "Μπολάτι" },
     });
 

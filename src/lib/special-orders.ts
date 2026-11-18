@@ -24,7 +24,6 @@ export const specialOrderSchema = z.object({
   technicalDetails: z
     .string()
     .trim()
-    .min(10, "Περιγράψτε τις τεχνικές λεπτομέρειες με τουλάχιστον 10 χαρακτήρες.")
     .max(3000, "Οι τεχνικές λεπτομέρειες πρέπει να είναι έως 3000 χαρακτήρες."),
   deliveryWindow: z
     .string()

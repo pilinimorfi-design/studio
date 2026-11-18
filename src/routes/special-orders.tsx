@@ -149,7 +149,6 @@ function SpecialOrdersPage() {
               inputMode="numeric"
               maxLength={10}
               required
-              placeholder="10 ψηφία"
               className="w-[12ch]"
               value={values.phone}
               onChange={(event) => setTextField("phone", event.target.value)}
@@ -222,7 +221,6 @@ function SpecialOrdersPage() {
             <Textarea
               id="special-order-details"
               rows={5}
-              required
               placeholder={content.detailsPlaceholder}
               value={values.technicalDetails}
               onChange={(event) => setTextField("technicalDetails", event.target.value)}
