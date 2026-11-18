@@ -100,7 +100,7 @@ function Index() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-5 py-10 text-center md:flex-row md:text-left">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.16em] text-primary">
-              Η γνώμη σας μετράει
+              Η ΓΝΩΜΗ ΣΑΣ ΜΕΤΡΑΕΙ
             </p>
             <h2 id="reviews-heading" className="mt-2 font-display text-2xl md:text-3xl">
               Η εμπιστοσύνη σας μας εμπνέει
@@ -265,9 +265,13 @@ function Index() {
                 href={about.sponsor.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+                className="inline-block align-middle overflow-hidden rounded-full border border-primary transition-all duration-200 hover:scale-105 hover:opacity-90 hover:shadow-md"
               >
-                {about.sponsor.name}
+                <img
+                  src="/spin.png"
+                  alt={about.sponsor.name}
+                  className="h-3.5 w-auto overflow-hidden rounded-full"
+                />
               </a>{" "}
               για την ευγενή χορηγία στα πρώτα μας βήματα.
             </p>

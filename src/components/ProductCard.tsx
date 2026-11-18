@@ -35,7 +35,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   }
 
   return (
-    <article className="group relative flex flex-col">
+    <article className="group relative flex h-full flex-col">
       <Link
         to="/product/$handle"
         params={{ handle: product.handle }}
@@ -57,7 +57,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         )}
       </Link>
       <div className="mt-4 flex flex-1 flex-col">
-        <div className="flex items-baseline justify-between gap-3">
+        <div className="flex min-h-12 items-baseline justify-between gap-3">
           <Link
             to="/product/$handle"
             params={{ handle: product.handle }}
@@ -69,29 +69,31 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             {formatPrice(product.price.amount, product.price.currencyCode)}
           </span>
         </div>
-        {product.productType && (
-          <p className="mt-1 text-sm text-muted-foreground">{product.productType}</p>
-        )}
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
+        <p className="mt-1 min-h-5 text-sm text-muted-foreground">{product.productType}</p>
+        <p className="mt-1 min-h-10 line-clamp-2 text-sm text-muted-foreground">
+          {product.description}
+        </p>
         <div className="mt-2">
           <ProductAttributes product={product} compact />
         </div>
-        <Button
-          variant="default"
-          className="relative z-10 mt-4"
-          onClick={() => void addToCart()}
-          disabled={isLoading || product.stock <= 0}
-        >
-          Προσθήκη στο καλάθι
-        </Button>
-        <Button
-          variant="default"
-          className="relative z-10 mt-1 h-8"
-          onClick={() => void buyNow()}
-          disabled={isLoading || product.stock <= 0}
-        >
-          Αγορά Τώρα
-        </Button>
+        <div className="mt-auto flex flex-col gap-1 pt-4">
+          <Button
+            variant="default"
+            className="relative z-10"
+            onClick={() => void addToCart()}
+            disabled={isLoading || product.stock <= 0}
+          >
+            Προσθήκη στο καλάθι
+          </Button>
+          <Button
+            variant="default"
+            className="relative z-10 h-8"
+            onClick={() => void buyNow()}
+            disabled={isLoading || product.stock <= 0}
+          >
+            Αγορά Τώρα
+          </Button>
+        </div>
       </div>
     </article>
   );

@@ -33,7 +33,7 @@ export function CartDrawer() {
         <Button
           variant="outline"
           size="icon"
-          className="relative bg-background hover:bg-primary hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
+          className="relative bg-background hover:bg-primary hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground data-[state=open]:border-primary data-[state=open]:bg-primary data-[state=open]:text-primary-foreground data-[state=open]:hover:bg-primary data-[state=open]:hover:text-primary-foreground"
           aria-label="Καλάθι"
         >
           <ShoppingBag className="size-5" />

@@ -81,7 +81,7 @@ export interface SeminarTermsContent {
 }
 
 const hero: HeroContent = {
-  eyebrow: "Εργαστήριο αγγειοπλαστικής",
+  eyebrow: "ΕΡΓΑΣΤΗΡΙΟ ΑΓΓΕΙΟΠΛΑΣΤΙΚΗΣ",
   title: "Πήλινη Μορφή",
   subtitle: "Χειροποίητα κεραμικά, πλασμένα στον τροχό με αγάπη για τον πηλό και τη δημιουργία.",
   image: heroImage,
