@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft, CreditCard, Info, WalletCards } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,7 +28,9 @@ type CheckoutField =
   | "county"
   | "shippingNotes"
   | "locker";
-type CheckoutFieldErrors = Partial<Record<CheckoutField, string>>;
+type CheckoutFieldErrors = Partial<Record<CheckoutField, string | undefined>>;
+type LegalConsentField = "acceptPrivacy" | "acceptTerms";
+type LegalConsentErrors = Partial<Record<LegalConsentField, string>>;
 
 export function CheckoutPage() {
   const items = useCartStore((state) => state.items);
@@ -44,6 +47,9 @@ export function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<CheckoutFieldErrors>({});
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [consentErrors, setConsentErrors] = useState<LegalConsentErrors>({});
   const simulationEnabled = import.meta.env.DEV;
   const cityWasEdited = useRef(false);
   const countyWasEdited = useRef(false);
@@ -156,6 +162,14 @@ export function CheckoutPage() {
     });
   }
 
+  function validateConsents(privacy: boolean, terms: boolean) {
+    const next: LegalConsentErrors = {};
+    if (!privacy) next.acceptPrivacy = "Πρέπει να αποδεχθείτε την Πολιτική Απορρήτου.";
+    if (!terms) next.acceptTerms = "Πρέπει να αποδεχθείτε τους Όρους Χρήσης.";
+    setConsentErrors(next);
+    return next;
+  }
+
   function renderFieldError(field: CheckoutField) {
     const message = fieldErrors[field];
     return message ? (
@@ -216,6 +230,11 @@ export function CheckoutPage() {
     event.preventDefault();
     setSubmitError("");
     setFieldErrors({});
+    const missingConsents = validateConsents(acceptPrivacy, acceptTerms);
+    if (Object.keys(missingConsents).length) {
+      document.getElementById("checkout-consents")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
     if (paymentMethod !== "everypay") {
       setSubmitError("Η προσομοίωση υποστηρίζει προσωρινά μόνο πληρωμή με κάρτα.");
       return;
@@ -813,6 +832,103 @@ export function CheckoutPage() {
                   </span>
                 </label>
               </RadioGroup>
+            </fieldset>
+
+            <fieldset id="checkout-consents" className="space-y-3" aria-label="Όροι αγοράς">
+              <legend className="sr-only">Όροι αγοράς</legend>
+              <div>
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="checkout-accept-privacy"
+                    name="acceptPrivacy"
+                    required
+                    checked={acceptPrivacy}
+                    onCheckedChange={(checked) => {
+                      const next = checked === true;
+                      setAcceptPrivacy(next);
+                      if (next) validateConsents(true, acceptTerms);
+                      else
+                        setConsentErrors((current) => {
+                          const { acceptPrivacy: _omitPrivacy, ...rest } = current;
+                          return rest;
+                        });
+                    }}
+                    aria-invalid={Boolean(consentErrors.acceptPrivacy)}
+                    aria-describedby={
+                      consentErrors.acceptPrivacy ? "checkout-accept-privacy-error" : undefined
+                    }
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="checkout-accept-privacy" className="text-sm leading-relaxed">
+                    Διάβασα και αποδέχομαι την{" "}
+                    <Link
+                      to="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-foreground underline underline-offset-4"
+                    >
+                      Πολιτική Απορρήτου
+                    </Link>
+                    . <span className="text-destructive">*</span>
+                  </label>
+                </div>
+                {consentErrors.acceptPrivacy && (
+                  <p
+                    id="checkout-accept-privacy-error"
+                    role="alert"
+                    className="mt-1.5 text-sm text-destructive"
+                  >
+                    {consentErrors.acceptPrivacy}
+                  </p>
+                )}
+              </div>
+              <div>
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="checkout-accept-terms"
+                    name="acceptTerms"
+                    required
+                    checked={acceptTerms}
+                    onCheckedChange={(checked) => {
+                      const next = checked === true;
+                      setAcceptTerms(next);
+                      if (next) validateConsents(acceptPrivacy, true);
+                      else
+                        setConsentErrors((current) => {
+                          const { acceptTerms: _omitTerms, ...rest } = current;
+                          return rest;
+                        });
+                    }}
+                    aria-invalid={Boolean(consentErrors.acceptTerms)}
+                    aria-describedby={
+                      consentErrors.acceptTerms ? "checkout-accept-terms-error" : undefined
+                    }
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="checkout-accept-terms" className="text-sm leading-relaxed">
+                    Διάβασα και αποδέχομαι τους{" "}
+                    <Link
+                      to="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-foreground underline underline-offset-4"
+                    >
+                      Όρους Χρήσης
+                    </Link>
+                    . <span className="text-destructive">*</span>
+                  </label>
+                </div>
+                {consentErrors.acceptTerms && (
+                  <p
+                    id="checkout-accept-terms-error"
+                    role="alert"
+                    className="mt-1.5 text-sm text-destructive"
+                  >
+                    {consentErrors.acceptTerms}
+                  </p>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">* Υποχρεωτικά πεδία</p>
             </fieldset>
 
             {submitError && (

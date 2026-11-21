@@ -18,6 +18,7 @@ import {
   createManagedProductCategory,
   createManagedProduct,
   createProductSku,
+  DEFAULT_CARE_INSTRUCTIONS,
   deleteManagedProduct,
   formatPrice,
   listManagedProductCategories,
@@ -39,7 +40,7 @@ const emptyForm = () => ({
   lengthCm: "",
   widthCm: "",
   weightGrams: "",
-  care: "",
+  care: DEFAULT_CARE_INSTRUCTIONS,
   glazed: false,
   fired: false,
   homeUse: false,
@@ -168,7 +169,7 @@ export function ProductManagementForm() {
       widthCm:
         product.widthCm === null || product.widthCm === undefined ? "" : String(product.widthCm),
       weightGrams: product.weightGrams === null ? "" : String(product.weightGrams),
-      care: product.care ?? "",
+      care: product.care ?? DEFAULT_CARE_INSTRUCTIONS,
       glazed: product.glazed ?? false,
       fired: product.fired ?? false,
       homeUse: product.homeUse ?? false,
@@ -452,6 +453,7 @@ export function ProductManagementForm() {
                 <Textarea
                   id="product-care"
                   value={form.care}
+                  placeholder={DEFAULT_CARE_INSTRUCTIONS}
                   onChange={(event) => setForm({ ...form, care: event.target.value })}
                   maxLength={2000}
                   rows={4}

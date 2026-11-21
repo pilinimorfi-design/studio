@@ -50,6 +50,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      device_reviews: {
+        Row: {
+          created_at: string;
+          device_id: string;
+          ip_hash: string | null;
+          rating: number;
+        };
+        Insert: {
+          created_at?: string;
+          device_id: string;
+          ip_hash?: string | null;
+          rating: number;
+        };
+        Update: {
+          created_at?: string;
+          device_id?: string;
+          ip_hash?: string | null;
+          rating?: number;
+        };
+        Relationships: [];
+      };
       special_order_inquiries: {
         Row: {
           created_at: string;
@@ -453,6 +474,17 @@ export type Database = {
           average_rating: number | null;
           review_count: number;
         }[];
+      };
+      get_device_review_summary: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          average_rating: number | null;
+          review_count: number;
+        }[];
+      };
+      upsert_device_review: {
+        Args: { p_device_id: string; p_rating: number };
+        Returns: undefined;
       };
     };
     Enums: {

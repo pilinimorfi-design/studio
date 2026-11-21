@@ -35,7 +35,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   }
 
   return (
-    <article className="group relative flex h-full flex-col">
+    <article className="group relative flex h-full flex-col border-[#C27D5E]/50 hover:border-[#C27D5E] border-[1px] rounded-xl bg-transparent p-4 shadow-soft">
       <Link
         to="/product/$handle"
         params={{ handle: product.handle }}
@@ -79,7 +79,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         <div className="mt-auto flex flex-col gap-1 pt-4">
           <Button
             variant="default"
-            className="relative z-10"
+            className="relative z-10 border border-input bg-background text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
             onClick={() => void addToCart()}
             disabled={isLoading || product.stock <= 0}
           >
@@ -87,7 +87,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           </Button>
           <Button
             variant="default"
-            className="relative z-10 h-8"
+            className="relative z-10 h-8 border border-input bg-background text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
             onClick={() => void buyNow()}
             disabled={isLoading || product.stock <= 0}
           >

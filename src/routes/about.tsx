@@ -28,13 +28,15 @@ function AboutPage() {
   return (
     <section className="bg-secondary">
       <div className="mx-auto grid max-w-6xl items-start gap-10 px-5 py-16 md:grid-cols-2 md:py-20">
-        <img
-          src={about.image}
-          alt="Χέρια που πλάθουν πηλό στον τροχό"
-          width={1008}
-          height={1200}
-          className="aspect-[4/5] w-full rounded-md object-cover shadow-soft"
-        />
+        <div className="md:sticky md:top-28">
+          <img
+            src={about.image}
+            alt="Χέρια που πλάθουν πηλό στον τροχό"
+            width={1008}
+            height={1200}
+            className="aspect-[4/5] w-full rounded-md object-cover shadow-soft"
+          />
+        </div>
         <div>
           <h1 className="font-display text-4xl md:text-5xl">{about.title}</h1>
           {about.paragraphs.map((t, i) => (

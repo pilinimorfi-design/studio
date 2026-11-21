@@ -7,7 +7,10 @@ export const Route = createFileRoute("/seminars")({
   head: () => ({
     meta: [
       { title: "Σεμινάρια αγγειοπλαστικής — Πήλινη Μορφή" },
-      { name: "description", content: "Σεμινάρια αγγειοπλαστικής δια ζώσης στο εργαστήριο και διαδικτυακά μέσω video." },
+      {
+        name: "description",
+        content: "Σεμινάρια αγγειοπλαστικής δια ζώσης στο εργαστήριο και διαδικτυακά μέσω video.",
+      },
       { property: "og:title", content: "Σεμινάρια αγγειοπλαστικής — Πήλινη Μορφή" },
       { property: "og:description", content: "Δια ζώσης και online σεμινάρια μέσω video." },
     ],
@@ -38,7 +41,10 @@ function Seminars() {
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Για ενημέρωση όταν ξεκινήσουν ξανά, καλέστε στο{" "}
-            <a href={status.contact.phoneHref} className="font-medium text-foreground underline underline-offset-4">
+            <a
+              href={status.contact.phoneHref}
+              className="font-medium text-foreground underline underline-offset-4"
+            >
               {status.contact.phone}
             </a>
             .
@@ -50,7 +56,11 @@ function Seminars() {
         {seminars.map((s) => {
           const Icon = s.kind === "online" ? Video : MapPin;
           return (
-            <section key={s.id} id={s.id} className="scroll-mt-24 rounded-md border bg-card p-8 shadow-soft">
+            <section
+              key={s.id}
+              id={s.id}
+              className="scroll-mt-24 rounded-md border bg-card p-8 shadow-soft"
+            >
               <Icon className="h-7 w-7 text-primary" />
               <h2 className="mt-4 font-display text-2xl">{s.title}</h2>
               <p className="mt-3 text-muted-foreground">{s.description}</p>
@@ -62,7 +72,10 @@ function Seminars() {
               )}
               <ul className="mt-6 space-y-2 text-sm">
                 {s.details.map((d) => (
-                  <li key={d} className="flex gap-2"><Check className="h-4 w-4 shrink-0 text-accent" />{d}</li>
+                  <li key={d} className="flex gap-2">
+                    <Check className="h-4 w-4 shrink-0 text-accent" />
+                    {d}
+                  </li>
                 ))}
               </ul>
             </section>
@@ -72,7 +85,10 @@ function Seminars() {
 
       <p className="mt-12 text-sm text-muted-foreground">
         Πριν δηλώσετε συμμετοχή, δείτε τους{" "}
-        <Link to="/seminar-terms" className="text-foreground underline underline-offset-4 hover:no-underline">
+        <Link
+          to="/seminar-terms"
+          className="text-foreground underline underline-offset-4 hover:no-underline"
+        >
           Όρους Συμμετοχής Σεμιναρίων
         </Link>
         : κανόνες εγγραφής και ακύρωσης.

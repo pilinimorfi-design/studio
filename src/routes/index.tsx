@@ -1,11 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Clock, ExternalLink, MapPin, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
-import { StarRatingDisplay } from "@/components/ReviewStars";
-import { getGoogleReviewUrl } from "@/lib/reviews";
-import { homeContentQuery, productsQuery, reviewSummaryQuery } from "@/lib/queries";
+import { ReviewStarsWidget } from "@/components/ReviewStars";
+import {
+  getGoogleReviewUrl,
+  getDeviceReview,
+  getClientIpHash,
+  submitDeviceReview,
+} from "@/lib/reviews";
+import { homeContentQuery, productsQuery, deviceReviewSummaryQuery } from "@/lib/queries";
 import { CATEGORIES } from "@/lib/categories";
 import {
   Select,
@@ -14,7 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDeviceId } from "@/hooks/useDeviceId";
 
 const ALL = "Όλα";
 const PAGE_SIZE = 8;
@@ -43,10 +49,54 @@ function Index() {
   const { data: content } = useSuspenseQuery(homeContentQuery);
   const { hero, about, seminarsStatus, seminarsCta } = content;
   const products = useQuery(productsQuery);
-  const reviews = useQuery(reviewSummaryQuery);
+  const deviceReviews = useQuery(deviceReviewSummaryQuery);
   const googleReviewUrl = getGoogleReviewUrl();
+  const deviceId = useDeviceId();
+  const queryClient = useQueryClient();
+  const [userRating, setUserRating] = useState<number | null>(null);
+  const [ipHash, setIpHash] = useState<string | null>(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
   const [category, setCategory] = useState<string>(ALL);
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    let mounted = true;
+    getClientIpHash().then((hash) => {
+      if (mounted) setIpHash(hash);
+    });
+
+    if (deviceId) {
+      getDeviceReview(deviceId)
+        .then((result) => {
+          if (mounted) setUserRating(result.rating);
+        })
+        .catch(() => {});
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [deviceId]);
+
+  const handleRate = async (rating: number) => {
+    if (!deviceId) return;
+    setSubmittingReview(true);
+    try {
+      const result = await submitDeviceReview({
+        data: { deviceId, rating, ipHash: ipHash ?? undefined },
+      });
+      setUserRating(rating);
+      if (result.averageRating !== null) {
+        queryClient.setQueryData(deviceReviewSummaryQuery.queryKey, {
+          averageRating: result.averageRating,
+          reviewCount: result.reviewCount,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["reviews", "device-summary"] });
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
   const productTypes = (products.data ?? [])
     .map((product) => product.productType)
     .filter((type): type is string => Boolean(type));
@@ -80,7 +130,9 @@ function Index() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-clay-deep/80 via-clay-deep/40 to-transparent" />
         <div className="relative mx-auto flex min-h-[70vh] max-w-6xl flex-col justify-end px-5 pb-14 pt-24 text-clay-deep-foreground md:justify-center">
-          <p className="text-xs uppercase tracking-[0.25em] opacity-80">{hero.eyebrow}</p>
+          <p className="inline-block w-fit px-2 py-1.5 rounded-full border border-amber-200/50 bg-transparent backdrop-blur-[2px] text-amber-100 text-xs uppercase tracking-widest">
+            {hero.eyebrow}
+          </p>
           <h1 className="mt-3 max-w-xl font-display text-5xl font-medium leading-[1.05] md:text-7xl">
             {hero.title}
           </h1>
@@ -97,49 +149,42 @@ function Index() {
       </section>
 
       <section aria-labelledby="reviews-heading" className="border-b border-border bg-secondary">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-5 py-10 text-center md:flex-row md:text-left">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.16em] text-primary">
-              Η ΓΝΩΜΗ ΣΑΣ ΜΕΤΡΑΕΙ
-            </p>
-            <h2 id="reviews-heading" className="mt-2 font-display text-2xl md:text-3xl">
-              Η εμπιστοσύνη σας μας εμπνέει
-            </h2>
-          </div>
-          <div className="flex flex-col items-center gap-2 md:items-start">
-            {reviews.isPending ? (
-              <p className="text-sm text-muted-foreground">Φόρτωση αξιολογήσεων...</p>
-            ) : reviews.isError ? (
-              <p role="alert" className="text-sm text-destructive">
-                Δεν ήταν δυνατή η φόρτωση των αξιολογήσεων.
+        <div className="mx-auto max-w-6xl px-5 py-10 text-left">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between w-full">
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-sm font-medium uppercase tracking-[0.16em] text-primary">
+                Η ΓΝΩΜΗ ΣΑΣ ΜΕΤΡΑΕΙ
               </p>
-            ) : reviews.data.reviewCount > 0 && reviews.data.averageRating !== null ? (
-              <>
-                <div className="flex items-center gap-3">
-                  <span className="font-display text-3xl font-semibold">
-                    {reviews.data.averageRating.toFixed(1)}
-                  </span>
-                  <StarRatingDisplay rating={reviews.data.averageRating} />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Με βάση {reviews.data.reviewCount}{" "}
-                  {reviews.data.reviewCount === 1 ? "αξιολόγηση" : "αξιολογήσεις"}
+              <h2 id="reviews-heading" className="mt-0 font-display text-2xl md:text-3xl">
+                Η εμπιστοσύνη σας μας εμπνέει
+              </h2>
+            </div>
+            <div className="flex flex-col items-center gap-4">
+              {deviceReviews.isPending ? (
+                <p className="text-sm text-muted-foreground">Φόρτωση αξιολογήσεων...</p>
+              ) : deviceReviews.isError ? (
+                <p role="alert" className="text-sm text-destructive">
+                  Δεν ήταν δυνατή η φόρτωση των αξιολογήσεων.
                 </p>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Γίνετε οι πρώτοι που θα μοιραστούν την εμπειρία τους.
-              </p>
-            )}
-            {googleReviewUrl && (
-              <Button asChild variant="link" className="h-auto p-0">
-                <a href={googleReviewUrl} target="_blank" rel="noopener noreferrer">
-                  Αξιολογήστε μας στο Google
-                  <ExternalLink className="ml-1 size-4" aria-hidden="true" />
-                </a>
-              </Button>
-            )}
+              ) : (
+                <ReviewStarsWidget
+                  averageRating={deviceReviews.data?.averageRating ?? null}
+                  reviewCount={deviceReviews.data?.reviewCount ?? 0}
+                  userRating={userRating}
+                  onRate={handleRate}
+                  submitting={submittingReview}
+                />
+              )}
+            </div>
           </div>
+          {googleReviewUrl && (
+            <Button asChild variant="link" className="h-auto p-0 mt-4 md:mt-0 md:ml-auto">
+              <a href={googleReviewUrl} target="_blank" rel="noopener noreferrer">
+                Αξιολογήστε μας στο Google
+                <ExternalLink className="ml-1 size-4" aria-hidden="true" />
+              </a>
+            </Button>
+          )}
         </div>
       </section>
 

@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { fetchProducts, fetchProductByHandle } from "@/lib/shopify";
-import { getReviewSummary } from "@/lib/reviews";
+import { getReviewSummary, getDeviceReviewSummary } from "@/lib/reviews";
 import { siteContent } from "@/content/site";
 
 export const productsQuery = queryOptions({
@@ -10,6 +10,10 @@ export const productsQuery = queryOptions({
 export const reviewSummaryQuery = queryOptions({
   queryKey: ["reviews", "summary"],
   queryFn: getReviewSummary,
+});
+export const deviceReviewSummaryQuery = queryOptions({
+  queryKey: ["reviews", "device-summary"],
+  queryFn: getDeviceReviewSummary,
 });
 export const productQuery = (handle: string) =>
   queryOptions({ queryKey: ["product", handle], queryFn: () => fetchProductByHandle(handle) });

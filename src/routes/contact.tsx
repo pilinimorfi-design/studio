@@ -3,8 +3,10 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { CheckCircle2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { contactSchema, submitContactMessage, type ContactInput } from "@/lib/contact";
 import { contactQuery } from "@/lib/queries";
+import { ReviewModal } from "@/components/ReviewModal";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -12,7 +14,8 @@ export const Route = createFileRoute("/contact")({
       { title: "Επικοινωνία — Πήλινη Μορφή" },
       {
         name: "description",
-        content: "Στείλτε μας την παραγγελία ή την ερώτησή σας μέσω της φόρμας επικοινωνίας του εργαστηρίου Πήλινη Μορφή.",
+        content:
+          "Στείλτε μας την παραγγελία ή την ερώτησή σας μέσω της φόρμας επικοινωνίας του εργαστηρίου Πήλινη Μορφή.",
       },
       { property: "og:title", content: "Επικοινωνία — Πήλινη Μορφή" },
       { property: "og:description", content: "Φόρμα επικοινωνίας για παραγγελίες και ερωτήσεις." },
@@ -23,6 +26,7 @@ export const Route = createFileRoute("/contact")({
 });
 
 type FieldErrors = Partial<Record<keyof ContactInput, string>>;
+type ConsentErrors = { acceptPrivacy?: string; acceptTerms?: string };
 
 function ContactPage() {
   const { data: contact } = useSuspenseQuery(contactQuery);
@@ -31,15 +35,28 @@ function ContactPage() {
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [consentErrors, setConsentErrors] = useState<ConsentErrors>({});
 
-  const set = (field: keyof ContactInput) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setValues((v) => ({ ...v, [field]: e.target.value }));
-    setErrors((err) => ({ ...err, [field]: undefined }));
-  };
+  const set =
+    (field: keyof ContactInput) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setValues((v) => ({ ...v, [field]: e.target.value }));
+      setErrors((err) => ({ ...err, [field]: undefined }));
+    };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
+    const nextConsentErrors: ConsentErrors = {};
+    if (!acceptPrivacy) {
+      nextConsentErrors.acceptPrivacy = "Πρέπει να αποδεχθείτε την Πολιτική Απορρήτου.";
+    }
+    if (!acceptTerms) nextConsentErrors.acceptTerms = "Πρέπει να αποδεχθείτε τους Όρους Χρήσης.";
+    setConsentErrors(nextConsentErrors);
+    if (Object.keys(nextConsentErrors).length) return;
     const parsed = contactSchema.safeParse(values);
     if (!parsed.success) {
       const fieldErrors: FieldErrors = {};
@@ -54,6 +71,7 @@ function ContactPage() {
     try {
       await submitContactMessage({ data: parsed.data });
       setSent(true);
+      setReviewModalOpen(true);
     } catch {
       setSubmitError("Η αποστολή απέτυχε. Δοκιμάστε ξανά ή καλέστε μας τηλεφωνικά.");
     } finally {
@@ -65,9 +83,12 @@ function ContactPage() {
     <section className="mx-auto max-w-xl px-5 py-16 md:py-24">
       <h1 className="font-display text-4xl md:text-5xl">Επικοινωνία</h1>
       <p className="mt-4 leading-relaxed text-muted-foreground">
-        Για παραγγελίες και ερωτήσεις, συμπληρώστε τη φόρμα και θα σας απαντήσουμε τηλεφωνικά. Αν προτιμάτε, καλέστε
-        μας απευθείας στο{" "}
-        <a href={contact.phoneHref} className="font-medium text-foreground underline underline-offset-4">
+        Για παραγγελίες και ερωτήσεις, συμπληρώστε τη φόρμα και θα σας απαντήσουμε τηλεφωνικά. Αν
+        προτιμάτε, καλέστε μας απευθείας στο{" "}
+        <a
+          href={contact.phoneHref}
+          className="font-medium text-foreground underline underline-offset-4"
+        >
           {contact.phone}
         </a>
         .
@@ -130,6 +151,96 @@ function ContactPage() {
             />
             {errors.message && <p className="mt-1 text-sm text-destructive">{errors.message}</p>}
           </div>
+          <div className="space-y-3 rounded-md border border-border p-4">
+            <p className="text-sm font-medium">Όροι αποστολής</p>
+            <div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="contact-accept-privacy"
+                  name="acceptPrivacy"
+                  required
+                  checked={acceptPrivacy}
+                  onCheckedChange={(checked) => {
+                    setAcceptPrivacy(checked === true);
+                    setConsentErrors((current) => {
+                      const { acceptPrivacy: _omitPrivacy, ...rest } = current;
+                      return rest;
+                    });
+                  }}
+                  aria-invalid={!!consentErrors.acceptPrivacy}
+                  aria-describedby={
+                    consentErrors.acceptPrivacy ? "contact-accept-privacy-error" : undefined
+                  }
+                  className="mt-0.5"
+                />
+                <label htmlFor="contact-accept-privacy" className="text-sm leading-relaxed">
+                  Διάβασα και αποδέχομαι την{" "}
+                  <Link
+                    to="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    Πολιτική Απορρήτου
+                  </Link>
+                  . <span className="text-destructive">*</span>
+                </label>
+              </div>
+              {consentErrors.acceptPrivacy && (
+                <p
+                  id="contact-accept-privacy-error"
+                  role="alert"
+                  className="mt-1 text-sm text-destructive"
+                >
+                  {consentErrors.acceptPrivacy}
+                </p>
+              )}
+            </div>
+            <div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="contact-accept-terms"
+                  name="acceptTerms"
+                  required
+                  checked={acceptTerms}
+                  onCheckedChange={(checked) => {
+                    setAcceptTerms(checked === true);
+                    setConsentErrors((current) => {
+                      const { acceptTerms: _omitTerms, ...rest } = current;
+                      return rest;
+                    });
+                  }}
+                  aria-invalid={!!consentErrors.acceptTerms}
+                  aria-describedby={
+                    consentErrors.acceptTerms ? "contact-accept-terms-error" : undefined
+                  }
+                  className="mt-0.5"
+                />
+                <label htmlFor="contact-accept-terms" className="text-sm leading-relaxed">
+                  Διάβασα και αποδέχομαι τους{" "}
+                  <Link
+                    to="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    Όρους Χρήσης
+                  </Link>
+                  . <span className="text-destructive">*</span>
+                </label>
+              </div>
+              {consentErrors.acceptTerms && (
+                <p
+                  id="contact-accept-terms-error"
+                  role="alert"
+                  className="mt-1 text-sm text-destructive"
+                >
+                  {consentErrors.acceptTerms}
+                </p>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">* Υποχρεωτικά πεδία</p>
+          </div>
           {submitError && <p className="text-sm text-destructive">{submitError}</p>}
           <Button type="submit" size="lg" disabled={submitting}>
             {submitting ? "Αποστολή…" : "Αποστολή μηνύματος"}
@@ -147,10 +258,14 @@ function ContactPage() {
       <p className="mt-10 flex items-center gap-2 text-sm text-muted-foreground">
         <Phone className="h-4 w-4 text-primary" />
         Τηλεφωνικά:{" "}
-        <a href={contact.phoneHref} className="font-medium text-foreground underline underline-offset-4">
+        <a
+          href={contact.phoneHref}
+          className="font-medium text-foreground underline underline-offset-4"
+        >
           {contact.phone}
         </a>
       </p>
+      <ReviewModal open={reviewModalOpen} onOpenChange={setReviewModalOpen} />
     </section>
   );
 }

@@ -9,6 +9,7 @@ import { getOrderConfirmation } from "@/lib/orders";
 import { getGoogleReviewUrl, submitOrderReview } from "@/lib/reviews";
 import { StarRatingPicker } from "@/components/ReviewStars";
 import logo from "@/assets/logo-pilinimorfi.png";
+import { ReviewModal } from "@/components/ReviewModal";
 
 const searchSchema = z.object({ orderId: z.string().uuid().optional() });
 
@@ -27,6 +28,7 @@ function OrderConfirmationPage() {
   const { orderId } = Route.useSearch();
   const queryClient = useQueryClient();
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
   useEffect(() => setSelectedRating(null), [orderId]);
   const confirmation = useQuery({
     queryKey: ["order-confirmation", orderId],
@@ -37,6 +39,11 @@ function OrderConfirmationPage() {
     enabled: Boolean(orderId),
     retry: false,
   });
+  useEffect(() => {
+    if (confirmation.data?.payment_status === "paid") {
+      setReviewModalOpen(true);
+    }
+  }, [confirmation.data?.payment_status]);
   const review = useMutation({
     mutationFn: (rating: number) => {
       if (!orderId) throw new Error("Λείπει ο αριθμός αναφοράς παραγγελίας.");
@@ -154,6 +161,7 @@ function OrderConfirmationPage() {
       <Button asChild variant="outline" className="mt-8">
         <Link to="/">Επιστροφή στο κατάστημα</Link>
       </Button>
+      <ReviewModal open={reviewModalOpen} onOpenChange={setReviewModalOpen} />
     </div>
   );
 }

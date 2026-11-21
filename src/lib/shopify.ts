@@ -71,6 +71,9 @@ export interface ManagedProductCategory {
   name: string;
 }
 
+export const DEFAULT_CARE_INSTRUCTIONS =
+  "Πλύνετε στο χέρι με χλιαρό νερό και ήπιο απορρυπαντικό.\nΑποφύγετε τις απότομες αλλαγές θερμοκρασίας.\nΜη χρησιμοποιείτε σύρμα ή σκληρά σφουγγάρια.\nΑπαγορεύεται η εισαγωγή των κεραμικών στον φούρνο μικροκυμάτων.\nΚάθε κομμάτι είναι χειροποίητο· μικρές διαφορές στο σχήμα και το χρώμα είναι φυσικές.";
+
 type ProductRow = {
   id: string;
   sku: string;
@@ -325,7 +328,7 @@ async function productValues(input: ManagedProductInput) {
     height_cm: Number(input.heightCm),
     length_cm: Number(input.lengthCm),
     width_cm: Number(input.widthCm),
-    care: input.care || null,
+    care: input.care || DEFAULT_CARE_INSTRUCTIONS,
     glazed: input.glazed,
     fired: input.fired,
     home_use: input.homeUse,

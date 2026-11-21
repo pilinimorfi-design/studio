@@ -52,8 +52,17 @@ describe("ProductCard — δημόσιος κατάλογος Supabase", () => {
 
     expect(screen.getByText("Πήλινο Μπολ")).toBeInTheDocument();
     expect(screen.getByText("Χειροποίητο κεραμικό μπολ")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Προσθήκη στο καλάθι" })).toHaveClass("bg-primary");
-    expect(screen.getByRole("button", { name: "Αγορά Τώρα" })).toHaveClass("bg-primary", "h-8");
+    expect(screen.getByRole("button", { name: "Προσθήκη στο καλάθι" })).toHaveClass(
+      "border-input",
+      "bg-background",
+      "text-foreground",
+    );
+    expect(screen.getByRole("button", { name: "Αγορά Τώρα" })).toHaveClass(
+      "border-input",
+      "bg-background",
+      "text-foreground",
+      "h-8",
+    );
   });
 
   it("adds the product and navigates to checkout when buying now", async () => {

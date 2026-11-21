@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { contactSchema } from "@/lib/contact";
 
-const valid = { name: "Μαρία Παπαδοπούλου", phone: "698 041 3589", message: "Θα ήθελα να ρωτήσω για ένα μπολ." };
+const valid = {
+  name: "Μαρία Παπαδοπούλου",
+  phone: "698 041 3589",
+  message: "Θα ήθελα να ρωτήσω για ένα μπολ.",
+};
 
 describe("contact form validation", () => {
   it("accepts a valid submission with a Greek phone containing spaces", () => {
@@ -25,7 +29,11 @@ describe("contact form validation", () => {
   });
 
   it("trims whitespace around the fields", () => {
-    const result = contactSchema.parse({ name: "  Μαρία  ", phone: " 6980413589 ", message: "  Ερώτηση για μπολ.  " });
+    const result = contactSchema.parse({
+      name: "  Μαρία  ",
+      phone: " 6980413589 ",
+      message: "  Ερώτηση για μπολ.  ",
+    });
     expect(result.name).toBe("Μαρία");
     expect(result.phone).toBe("6980413589");
     expect(result.message).toBe("Ερώτηση για μπολ.");

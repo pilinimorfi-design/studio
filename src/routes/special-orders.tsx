@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { specialOrdersQuery } from "@/lib/queries";
@@ -12,6 +13,7 @@ import {
   submitSpecialOrderInquiry,
   type SpecialOrderInput,
 } from "@/lib/special-orders";
+import { ReviewModal } from "@/components/ReviewModal";
 
 export const Route = createFileRoute("/special-orders")({
   head: () => ({
@@ -42,7 +44,8 @@ const initialValues: SpecialOrderInput = {
   deliveryWindow: "",
 };
 
-type FieldErrors = Partial<Record<keyof SpecialOrderInput, string>>;
+type FieldErrors = Partial<Record<keyof SpecialOrderInput, string | undefined>>;
+type ConsentErrors = { acceptPrivacy?: string; acceptTerms?: string };
 
 function SpecialOrdersPage() {
   const { data: content } = useSuspenseQuery(specialOrdersQuery);
@@ -51,6 +54,10 @@ function SpecialOrdersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [consentErrors, setConsentErrors] = useState<ConsentErrors>({});
 
   function setTextField(field: Exclude<keyof SpecialOrderInput, "quantity">, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -60,6 +67,13 @@ function SpecialOrdersPage() {
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitError("");
+    const nextConsentErrors: ConsentErrors = {};
+    if (!acceptPrivacy) {
+      nextConsentErrors.acceptPrivacy = "Πρέπει να αποδεχθείτε την Πολιτική Απορρήτου.";
+    }
+    if (!acceptTerms) nextConsentErrors.acceptTerms = "Πρέπει να αποδεχθείτε τους Όρους Χρήσης.";
+    setConsentErrors(nextConsentErrors);
+    if (Object.keys(nextConsentErrors).length) return;
     const parsed = specialOrderSchema.safeParse(values);
     if (!parsed.success) {
       const fieldErrors: FieldErrors = {};
@@ -77,6 +91,7 @@ function SpecialOrdersPage() {
     try {
       await submitSpecialOrderInquiry({ data: parsed.data });
       setSent(true);
+      setReviewModalOpen(true);
     } catch (error) {
       setSubmitError(
         error instanceof Error
@@ -265,18 +280,105 @@ function SpecialOrdersPage() {
               {submitError}
             </p>
           )}
+          <div className="space-y-3 rounded-md border border-border p-4">
+            <p className="text-sm font-medium">Όροι αποστολής</p>
+            <div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="special-order-accept-privacy"
+                  name="acceptPrivacy"
+                  required
+                  checked={acceptPrivacy}
+                  onCheckedChange={(checked) => {
+                    setAcceptPrivacy(checked === true);
+                    setConsentErrors((current) => {
+                      const { acceptPrivacy: _omitPrivacy, ...rest } = current;
+                      return rest;
+                    });
+                  }}
+                  aria-invalid={Boolean(consentErrors.acceptPrivacy)}
+                  aria-describedby={
+                    consentErrors.acceptPrivacy ? "special-order-accept-privacy-error" : undefined
+                  }
+                  className="mt-0.5"
+                />
+                <label htmlFor="special-order-accept-privacy" className="text-sm leading-relaxed">
+                  Διάβασα και αποδέχομαι την{" "}
+                  <Link
+                    to="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    Πολιτική Απορρήτου
+                  </Link>
+                  . <span className="text-destructive">*</span>
+                </label>
+              </div>
+              {consentErrors.acceptPrivacy && (
+                <p
+                  id="special-order-accept-privacy-error"
+                  className="mt-1 text-sm text-destructive"
+                  role="alert"
+                >
+                  {consentErrors.acceptPrivacy}
+                </p>
+              )}
+            </div>
+            <div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="special-order-accept-terms"
+                  name="acceptTerms"
+                  required
+                  checked={acceptTerms}
+                  onCheckedChange={(checked) => {
+                    setAcceptTerms(checked === true);
+                    setConsentErrors((current) => {
+                      const { acceptTerms: _omitTerms, ...rest } = current;
+                      return rest;
+                    });
+                  }}
+                  aria-invalid={Boolean(consentErrors.acceptTerms)}
+                  aria-describedby={
+                    consentErrors.acceptTerms ? "special-order-accept-terms-error" : undefined
+                  }
+                  className="mt-0.5"
+                />
+                <label htmlFor="special-order-accept-terms" className="text-sm leading-relaxed">
+                  Διάβασα και αποδέχομαι τους{" "}
+                  <Link
+                    to="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    Όρους Χρήσης
+                  </Link>
+                  . <span className="text-destructive">*</span>
+                </label>
+              </div>
+              {consentErrors.acceptTerms && (
+                <p
+                  id="special-order-accept-terms-error"
+                  className="mt-1 text-sm text-destructive"
+                  role="alert"
+                >
+                  {consentErrors.acceptTerms}
+                </p>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">* Υποχρεωτικά πεδία</p>
+          </div>
           <Button type="submit" size="lg" disabled={submitting}>
             {submitting ? "Αποστολή…" : "Αποστολή αιτήματος"}
           </Button>
           <p className="text-xs text-muted-foreground">
-            Με την αποστολή αποδέχεστε την{" "}
-            <Link to="/privacy" className="underline underline-offset-4">
-              Πολιτική Απορρήτου
-            </Link>
-            . Τα στοιχεία θα χρησιμοποιηθούν μόνο για την απάντηση στο αίτημά σας.
+            Τα στοιχεία σας θα χρησιμοποιηθούν μόνο για την απάντηση στο αίτημά σας.
           </p>
         </form>
       )}
+      <ReviewModal open={reviewModalOpen} onOpenChange={setReviewModalOpen} />
     </section>
   );
 }

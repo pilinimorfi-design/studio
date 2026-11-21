@@ -21,6 +21,11 @@ export function SiteHeader() {
       <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-3 px-4 py-2 md:h-16 md:px-5 md:py-0">
         <Link
           to="/"
+          onClick={() => {
+            requestAnimationFrame(() => {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+          }}
           className="flex shrink-0 items-center gap-2 whitespace-nowrap font-display text-xl font-semibold tracking-tight text-foreground sm:gap-3 sm:text-3xl"
         >
           <img src={logo} alt="" aria-hidden="true" className="size-10 object-contain sm:size-12" />
