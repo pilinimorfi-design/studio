@@ -141,8 +141,9 @@ function ProductPage() {
               <div className="mt-3">
                 <ProductAttributes product={p} />
                 {(p.heightCm != null || p.lengthCm != null || p.widthCm != null) && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Οι διαστάσεις υπολογίζονται μαζί με τη συσκευασία αποστολής.
+                  <p className="mt-4 w-fit border-x-2 border-primary/40 px-3 text-sm text-muted-foreground">
+                    <span className="font-medium text-primary">Σημείωση:</span> Οι διαστάσεις
+                    υπολογίζονται μαζί με τη συσκευασία αποστολής.
                   </p>
                 )}
               </div>
