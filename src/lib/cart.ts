@@ -48,7 +48,8 @@ async function loadCart(cartToken: string): Promise<GuestCartItem[]> {
   const { data: cartRows, error: cartError } = await supabaseAdmin
     .from("cart_items")
     .select("product_id, quantity")
-    .eq("cart_token_hash", hashCartToken(cartToken));
+    .eq("cart_token_hash", hashCartToken(cartToken))
+    .order("created_at", { ascending: true });
   if (cartError) throw new Error(`Η φόρτωση του καλαθιού απέτυχε: ${cartError.message}`);
   if (!cartRows?.length) return [];
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, CreditCard, Info, WalletCards } from "lucide-react";
+import { ArrowLeft, CreditCard, Info, Package, WalletCards } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -957,8 +957,21 @@ export function CheckoutPage() {
           <h2 className="font-display text-2xl">Η παραγγελία σας</h2>
           <ul className="mt-5 divide-y divide-border rounded-lg border border-border bg-card">
             {items.map(({ product, quantity }) => (
-              <li key={product.id} className="flex items-center justify-between gap-4 p-4">
-                <div>
+              <li key={product.id} className="flex items-start justify-between gap-4 p-4">
+                <div className="shrink-0">
+                  {product.imageUrl ? (
+                    <img
+                      src={product.imageUrl}
+                      alt={product.title}
+                      className="w-14 h-14 rounded-lg object-cover border border-border/50 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-lg bg-border flex items-center justify-center border border-border/50 shrink-0">
+                      <Package className="size-6 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium">{product.title}</p>
                   <p className="text-sm text-muted-foreground">Ποσότητα: {quantity}</p>
                 </div>

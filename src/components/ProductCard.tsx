@@ -26,12 +26,11 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   async function buyNow() {
     try {
       await addItem(product);
-      navigate({ to: "/checkout" });
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Δεν ήταν δυνατή η προσθήκη στο καλάθι.",
-      );
+    } catch {
+      // Αν το προϊόν είναι ήδη στο μέγιστο απόθεμά του στο καλάθι,
+      // συνεχίστε προς το ταμείο χωρίς να μπλοκάρετε τον χρήστη.
     }
+    navigate({ to: "/checkout" });
   }
 
   return (
@@ -69,10 +68,9 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             {formatPrice(product.price.amount, product.price.currencyCode)}
           </span>
         </div>
-        <p className="mt-1 min-h-5 text-sm text-muted-foreground">{product.productType}</p>
-        <p className="mt-1 min-h-10 line-clamp-2 text-sm text-muted-foreground">
+        <div className="mt-1 min-h-10 line-clamp-2 text-sm text-muted-foreground">
           {product.description}
-        </p>
+        </div>
         <div className="mt-2">
           <ProductAttributes product={product} compact />
         </div>
