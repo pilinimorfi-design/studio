@@ -56,7 +56,6 @@ export interface CatalogProduct {
   widthCm?: number | null;
   care: string | null;
   glazed: boolean | null;
-  fired: boolean | null;
   homeUse: boolean | null;
 }
 
@@ -118,7 +117,6 @@ function mapCatalogProduct(row: ProductRow): ManagedProduct {
     widthCm: row.width_cm,
     care: row.care,
     glazed: row.glazed,
-    fired: row.fired,
     homeUse: row.home_use,
     isPublished: row.is_published,
     createdAt: row.created_at,
@@ -127,7 +125,7 @@ function mapCatalogProduct(row: ProductRow): ManagedProduct {
 }
 
 const PRODUCT_SELECT =
-  "id, sku, stock, category_id, title, description, handle, product_type, price, image_url, dimensions, weight_grams, height_cm, length_cm, width_cm, care, glazed, fired, home_use, is_published, created_at, updated_at";
+  "id, sku, stock, category_id, title, description, handle, product_type, price, image_url, dimensions, weight_grams, height_cm, length_cm, width_cm, care, glazed, home_use, is_published, created_at, updated_at";
 
 async function verifyProductAdminPassword(password: string) {
   const expectedPassword = process.env["PRODUCT_ADMIN_PASSWORD"];
@@ -224,7 +222,7 @@ const productInputSchema = z.object({
     .url()
     .refine((value) => new URL(value).protocol === "https:")
     .or(z.literal("")),
-  dimensions: z.string().trim().max(500),
+  dimensions: z.string().trim().max(500).optional(),
   heightCm: z
     .string()
     .regex(/^\d+(?:\.\d{1,2})?$/)
@@ -250,7 +248,6 @@ const productInputSchema = z.object({
     .refine((value) => Number(value) <= 999999),
   care: z.string().trim().max(2000),
   glazed: z.boolean(),
-  fired: z.boolean(),
   homeUse: z.boolean(),
   isPublished: z.boolean(),
 });
@@ -330,7 +327,6 @@ async function productValues(input: ManagedProductInput) {
     width_cm: Number(input.widthCm),
     care: input.care || DEFAULT_CARE_INSTRUCTIONS,
     glazed: input.glazed,
-    fired: input.fired,
     home_use: input.homeUse,
     is_published: input.isPublished,
     stock: Number(input.stock),

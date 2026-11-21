@@ -37,7 +37,6 @@ const product: CatalogProduct = {
   weightGrams: null,
   care: null,
   glazed: null,
-  fired: null,
   homeUse: null,
 };
 

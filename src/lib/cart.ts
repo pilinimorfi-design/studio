@@ -32,10 +32,12 @@ type CartProductRow = {
   price: number;
   image_url: string | null;
   dimensions: string | null;
+  height_cm: number | null;
+  length_cm: number | null;
+  width_cm: number | null;
   weight_grams: number | null;
   care: string | null;
   glazed: boolean | null;
-  fired: boolean | null;
   home_use: boolean | null;
 };
 
@@ -56,7 +58,7 @@ async function loadCart(cartToken: string): Promise<GuestCartItem[]> {
   const { data: products, error: productsError } = await supabaseAdmin
     .from("products")
     .select(
-      "id, sku, stock, title, description, handle, product_type, price, image_url, dimensions, weight_grams, care, glazed, fired, home_use",
+      "id, sku, stock, title, description, handle, product_type, price, image_url, dimensions, height_cm, length_cm, width_cm, weight_grams, care, glazed, home_use",
     )
     .in(
       "id",
@@ -86,10 +88,12 @@ async function loadCart(cartToken: string): Promise<GuestCartItem[]> {
           price: { amount: String(row.price), currencyCode: "EUR" },
           imageUrl: row.image_url,
           dimensions: row.dimensions,
+          heightCm: row.height_cm,
+          lengthCm: row.length_cm,
+          widthCm: row.width_cm,
           weightGrams: row.weight_grams,
           care: row.care,
           glazed: row.glazed,
-          fired: row.fired,
           homeUse: row.home_use,
         },
       },

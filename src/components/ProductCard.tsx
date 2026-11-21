@@ -75,7 +75,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           {product.description}
         </div>
         <div className="mt-2">
-          <ProductAttributes product={product} compact />
+          <ProductAttributes product={product} />
         </div>
         <div className="mt-auto flex flex-col gap-1 pt-4">
           <Button

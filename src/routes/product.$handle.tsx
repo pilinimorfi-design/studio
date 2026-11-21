@@ -43,10 +43,6 @@ function ProductPage() {
   const cartLoading = useCartStore((state) => state.isLoading);
   const cartItems = useCartStore((state) => state.items);
 
-  const cartItem = cartItems.find((item) => item.product.id === p.id);
-  const cartQuantity = cartItem?.quantity ?? 0;
-  const atMaxStock = cartQuantity >= p.stock;
-
   if (isLoading)
     return (
       <div className="flex justify-center py-32">
@@ -57,6 +53,10 @@ function ProductPage() {
     return <div className="py-32 text-center text-muted-foreground">Το προϊόν δεν βρέθηκε.</div>;
 
   const p = product;
+  const cartItem = cartItems.find((item) => item.product.id === p.id);
+  const cartQuantity = cartItem?.quantity ?? 0;
+  const atMaxStock = cartQuantity >= p.stock;
+
   async function addToCart() {
     try {
       await addItem(p);
@@ -131,28 +131,33 @@ function ProductPage() {
           </section>
 
           {(typeof p.weightGrams === "number" ||
-            Boolean(p.dimensions?.trim()) ||
+            p.heightCm != null ||
+            p.lengthCm != null ||
+            p.widthCm != null ||
             p.glazed != null ||
-            p.fired != null ||
             p.homeUse != null) && (
             <section className="mt-10 border-t pt-6">
               <h2 className="font-display text-xl">Χαρακτηριστικά</h2>
               <div className="mt-3">
                 <ProductAttributes product={p} />
+                {(p.heightCm != null || p.lengthCm != null || p.widthCm != null) && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Οι διαστάσεις υπολογίζονται μαζί με τη συσκευασία αποστολής.
+                  </p>
+                )}
               </div>
             </section>
           )}
           <section className="mt-6 border-t pt-6">
             <h2 className="font-display text-xl">Οδηγίες φροντίδας</h2>
-            {p.care ? (
-              <p className="mt-2 whitespace-pre-line text-muted-foreground">{p.care}</p>
-            ) : (
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-                {details?.care.map((c) => (
-                  <li key={c}>{c}</li>
-                ))}
-              </ul>
-            )}
+            <ul className="mt-2 list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+              {(p.care
+                ? p.care.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+                : details?.care ?? []
+              ).map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
           </section>
         </div>
       </div>

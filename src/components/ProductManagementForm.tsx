@@ -35,14 +35,12 @@ const emptyForm = () => ({
   stock: "1",
   categoryId: "",
   imageUrl: "",
-  dimensions: "",
   heightCm: "",
   lengthCm: "",
   widthCm: "",
   weightGrams: "",
   care: DEFAULT_CARE_INSTRUCTIONS,
   glazed: false,
-  fired: false,
   homeUse: false,
   isPublished: true,
 });
@@ -161,7 +159,6 @@ export function ProductManagementForm() {
       stock: String(product.stock),
       categoryId,
       imageUrl: product.imageUrl ?? "",
-      dimensions: product.dimensions ?? "",
       heightCm:
         product.heightCm === null || product.heightCm === undefined ? "" : String(product.heightCm),
       lengthCm:
@@ -171,7 +168,6 @@ export function ProductManagementForm() {
       weightGrams: product.weightGrams === null ? "" : String(product.weightGrams),
       care: product.care ?? DEFAULT_CARE_INSTRUCTIONS,
       glazed: product.glazed ?? false,
-      fired: product.fired ?? false,
       homeUse: product.homeUse ?? false,
       isPublished: product.isPublished,
     });
@@ -376,20 +372,8 @@ export function ProductManagementForm() {
                   onChange={(event) => setForm({ ...form, imageUrl: event.target.value })}
                 />
               </div>
-              <div>
-                <FieldLabel htmlFor="product-dimensions">Διαστάσεις</FieldLabel>
-                <Input
-                  id="product-dimensions"
-                  placeholder="π.χ. 12 × 8 × 6 cm"
-                  value={form.dimensions}
-                  onChange={(event) => setForm({ ...form, dimensions: event.target.value })}
-                  maxLength={500}
-                />
-              </div>
               <fieldset>
-                <legend className="mb-1.5 block text-sm font-medium">
-                  Διαστάσεις συσκευασμένου προϊόντος (cm)
-                </legend>
+                <legend className="mb-1.5 block text-sm font-medium">Διαστάσεις (cm)</legend>
                 <p className="mb-3 text-xs text-muted-foreground">
                   Χρησιμοποιούνται για τον υπολογισμό όγκου και τον αυτόματο χωρισμό σε δέματα.
                   Συμπεριλάβετε τη συσκευασία προστασίας.
@@ -470,16 +454,6 @@ export function ProductManagementForm() {
                     className="size-4 accent-primary"
                   />
                   Υαλωμένο
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    id="product-fired"
-                    type="checkbox"
-                    checked={form.fired}
-                    onChange={(event) => setForm({ ...form, fired: event.target.checked })}
-                    className="size-4 accent-primary"
-                  />
-                  Ψημένο
                 </label>
                 <label className="flex items-center gap-2 text-sm">
                   <input

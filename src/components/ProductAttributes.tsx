@@ -2,26 +2,21 @@ import type { CatalogProduct } from "@/lib/shopify";
 
 type ProductAttributesProps = {
   product: CatalogProduct;
-  compact?: boolean;
 };
 
-export function ProductAttributes({ product, compact = false }: ProductAttributesProps) {
+export function ProductAttributes({ product }: ProductAttributesProps) {
   const attributes = [
     typeof product.weightGrams === "number" && {
       label: "Βάρος",
       value: `${product.weightGrams} g`,
     },
-    product.dimensions?.trim() && {
+    (product.heightCm != null || product.lengthCm != null || product.widthCm != null) && {
       label: "Διαστάσεις",
-      value: product.dimensions,
+      value: `Υ: ${product.heightCm ?? ""} Μ: ${product.lengthCm ?? ""} Π: ${product.widthCm ?? ""} cm`,
     },
     product.glazed != null && {
       label: "Υάλωμα",
       value: product.glazed ? "Υαλωμένο" : "Χωρίς υάλωμα",
-    },
-    product.fired != null && {
-      label: "Ψήσιμο",
-      value: product.fired ? "Ψημένο" : "Άψητο",
     },
     product.homeUse != null && {
       label: "Οικιακή χρήση",
@@ -34,11 +29,7 @@ export function ProductAttributes({ product, compact = false }: ProductAttribute
   return (
     <ul
       aria-label="Χαρακτηριστικά προϊόντος"
-      className={
-        compact
-          ? "flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground"
-          : "grid gap-y-2 text-sm text-muted-foreground"
-      }
+      className="flex flex-col gap-1 text-sm text-muted-foreground"
     >
       {attributes.map(({ label, value }) => (
         <li key={label}>

@@ -16,9 +16,11 @@ const product: CatalogProduct = {
   imageUrl: null,
   dimensions: null,
   weightGrams: null,
+  heightCm: null,
+  lengthCm: null,
+  widthCm: null,
   care: null,
   glazed: null,
-  fired: null,
   homeUse: null,
 };
 
@@ -37,18 +39,18 @@ describe("ProductAttributes", () => {
         product={{
           ...product,
           weightGrams: 0,
-          dimensions: "10 × 8 cm",
+          heightCm: 10,
+          lengthCm: 8,
+          widthCm: 6,
           glazed: false,
-          fired: true,
           homeUse: false,
         }}
       />,
     );
 
     expect(screen.getByText("0 g")).toBeInTheDocument();
-    expect(screen.getByText("10 × 8 cm")).toBeInTheDocument();
+    expect(screen.getByText("Υ: 10 Μ: 8 Π: 6 cm")).toBeInTheDocument();
     expect(screen.getByText("Χωρίς υάλωμα")).toBeInTheDocument();
-    expect(screen.getByText("Ψημένο")).toBeInTheDocument();
     expect(screen.getByText("Μη κατάλληλο")).toBeInTheDocument();
   });
 });
