@@ -285,49 +285,6 @@ function SpecialOrdersPage() {
             <div>
               <div className="flex items-start gap-3">
                 <Checkbox
-                  id="special-order-accept-privacy"
-                  name="acceptPrivacy"
-                  required
-                  checked={acceptPrivacy}
-                  onCheckedChange={(checked) => {
-                    setAcceptPrivacy(checked === true);
-                    setConsentErrors((current) => {
-                      const { acceptPrivacy: _omitPrivacy, ...rest } = current;
-                      return rest;
-                    });
-                  }}
-                  aria-invalid={Boolean(consentErrors.acceptPrivacy)}
-                  aria-describedby={
-                    consentErrors.acceptPrivacy ? "special-order-accept-privacy-error" : undefined
-                  }
-                  className="mt-0.5"
-                />
-                <label htmlFor="special-order-accept-privacy" className="text-sm leading-relaxed">
-                  Διάβασα και αποδέχομαι την{" "}
-                  <Link
-                    to="/privacy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-foreground underline underline-offset-4"
-                  >
-                    Πολιτική Απορρήτου
-                  </Link>
-                  . <span className="text-destructive">*</span>
-                </label>
-              </div>
-              {consentErrors.acceptPrivacy && (
-                <p
-                  id="special-order-accept-privacy-error"
-                  className="mt-1 text-sm text-destructive"
-                  role="alert"
-                >
-                  {consentErrors.acceptPrivacy}
-                </p>
-              )}
-            </div>
-            <div>
-              <div className="flex items-start gap-3">
-                <Checkbox
                   id="special-order-accept-terms"
                   name="acceptTerms"
                   required
@@ -365,6 +322,49 @@ function SpecialOrdersPage() {
                   role="alert"
                 >
                   {consentErrors.acceptTerms}
+                </p>
+              )}
+            </div>
+            <div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="special-order-accept-privacy"
+                  name="acceptPrivacy"
+                  required
+                  checked={acceptPrivacy}
+                  onCheckedChange={(checked) => {
+                    setAcceptPrivacy(checked === true);
+                    setConsentErrors((current) => {
+                      const { acceptPrivacy: _omitPrivacy, ...rest } = current;
+                      return rest;
+                    });
+                  }}
+                  aria-invalid={Boolean(consentErrors.acceptPrivacy)}
+                  aria-describedby={
+                    consentErrors.acceptPrivacy ? "special-order-accept-privacy-error" : undefined
+                  }
+                  className="mt-0.5"
+                />
+                <label htmlFor="special-order-accept-privacy" className="text-sm leading-relaxed">
+                  Διάβασα και αποδέχομαι την{" "}
+                  <Link
+                    to="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    Πολιτική Απορρήτου
+                  </Link>
+                  . <span className="text-destructive">*</span>
+                </label>
+              </div>
+              {consentErrors.acceptPrivacy && (
+                <p
+                  id="special-order-accept-privacy-error"
+                  className="mt-1 text-sm text-destructive"
+                  role="alert"
+                >
+                  {consentErrors.acceptPrivacy}
                 </p>
               )}
             </div>

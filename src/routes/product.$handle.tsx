@@ -41,6 +41,11 @@ function ProductPage() {
   const navigate = useNavigate();
   const addItem = useCartStore((state) => state.addItem);
   const cartLoading = useCartStore((state) => state.isLoading);
+  const cartItems = useCartStore((state) => state.items);
+
+  const cartItem = cartItems.find((item) => item.product.id === p.id);
+  const cartQuantity = cartItem?.quantity ?? 0;
+  const atMaxStock = cartQuantity >= p.stock;
 
   if (isLoading)
     return (
@@ -64,14 +69,11 @@ function ProductPage() {
   }
 
   async function buyNow() {
-    try {
+    const alreadyInCart = cartItems.some((item) => item.product.id === p.id);
+    if (!alreadyInCart) {
       await addItem(p);
-      navigate({ to: "/checkout" });
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Δεν ήταν δυνατή η προσθήκη στο καλάθι.",
-      );
     }
+    navigate({ to: "/checkout" });
   }
 
   return (
@@ -106,12 +108,18 @@ function ProductPage() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Button
               size="lg"
+              className="text-sm disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
               onClick={() => void addToCart()}
+              disabled={cartLoading || p.stock <= 0 || atMaxStock}
+            >
+              {atMaxStock ? "Βρίσκεται στο καλάθι" : "Προσθήκη στο καλάθι"}
+            </Button>
+            <Button
+              size="lg"
+              className="text-sm disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
+              onClick={() => void buyNow()}
               disabled={cartLoading || p.stock <= 0}
             >
-              Προσθήκη στο καλάθι
-            </Button>
-            <Button size="lg" onClick={() => void buyNow()} disabled={cartLoading || p.stock <= 0}>
               Αγορά Τώρα
             </Button>
           </div>

@@ -1,6 +1,6 @@
 export const BOXNOW_PACKAGES = [
   { size: "small", label: "Μικρό", heightCm: 8, lengthCm: 45, widthCm: 60, price: 4 },
-  { size: "medium", label: "Μεσαίο", heightCm: 17, lengthCm: 45, widthCm: 60, price: 4 },
+  { size: "medium", label: "Μεσαίο", heightCm: 17, lengthCm: 45, widthCm: 60, price: 5 },
   { size: "large", label: "Μεγάλο", heightCm: 36, lengthCm: 45, widthCm: 60, price: 10 },
 ] as const;
 export const ACS_PRICE_PER_PARCEL = 12;

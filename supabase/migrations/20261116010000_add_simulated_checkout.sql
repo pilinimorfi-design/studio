@@ -104,7 +104,6 @@ BEGIN
   WHERE cart.cart_token_hash = p_cart_token_hash
     AND product.is_published = TRUE;
 
-  DELETE FROM public.cart_items WHERE cart_token_hash = p_cart_token_hash;
   RETURN v_order_id;
 END;
 $$;

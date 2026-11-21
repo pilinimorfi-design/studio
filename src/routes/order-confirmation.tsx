@@ -10,6 +10,17 @@ import { getGoogleReviewUrl, submitOrderReview } from "@/lib/reviews";
 import { StarRatingPicker } from "@/components/ReviewStars";
 import logo from "@/assets/logo-pilinimorfi.png";
 import { ReviewModal } from "@/components/ReviewModal";
+import { useCartStore } from "@/stores/cartStore";
+
+const CHECKOUT_DRAFT_KEY = "pilinimorfi_checkout_draft";
+
+function clearCheckoutDraft() {
+  try {
+    sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 const searchSchema = z.object({ orderId: z.string().uuid().optional() });
 
@@ -27,6 +38,7 @@ export const Route = createFileRoute("/order-confirmation")({
 function OrderConfirmationPage() {
   const { orderId } = Route.useSearch();
   const queryClient = useQueryClient();
+  const clearLocalCart = useCartStore((state) => state.clearLocalCart);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   useEffect(() => setSelectedRating(null), [orderId]);
@@ -41,9 +53,11 @@ function OrderConfirmationPage() {
   });
   useEffect(() => {
     if (confirmation.data?.payment_status === "paid") {
+      clearLocalCart();
+      clearCheckoutDraft();
       setReviewModalOpen(true);
     }
-  }, [confirmation.data?.payment_status]);
+  }, [confirmation.data?.payment_status, clearLocalCart]);
   const review = useMutation({
     mutationFn: (rating: number) => {
       if (!orderId) throw new Error("Λείπει ο αριθμός αναφοράς παραγγελίας.");
@@ -142,25 +156,21 @@ function OrderConfirmationPage() {
       ) : (
         <>
           <TriangleAlert className="mx-auto size-10 text-muted-foreground" />
-          <h1 className="mt-5 font-display text-3xl">
-            {confirmation.data?.is_test && confirmation.data.payment_status === "failed"
-              ? "Η δοκιμαστική πληρωμή απέτυχε"
-              : orderId
-                ? "Η πληρωμή δεν έχει επιβεβαιωθεί"
-                : "Δεν βρέθηκε παραγγελία"}
-          </h1>
+          <h1 className="mt-5 font-display text-3xl">Η πληρωμή δεν έχει επιβεβαιωθεί</h1>
           <p className="mt-3 text-muted-foreground">
-            {confirmation.data?.is_test && confirmation.data.payment_status === "failed"
-              ? "Δεν πραγματοποιήθηκε πραγματική χρέωση. Μπορείτε να επιστρέψετε στο κατάστημα και να επαναλάβετε τη δοκιμή."
-              : orderId && confirmation.data
-                ? "Η παραγγελία υπάρχει, αλλά η πληρωμή δεν έχει επιβεβαιωθεί ακόμη. Δεν θεωρείται ολοκληρωμένη."
-                : "Η σελίδα αυτή εμφανίζει επιβεβαίωση μόνο για παραγγελία που έχει καταχωριστεί και πληρωμή που έχει επιβεβαιωθεί."}
+            Δεν πραγματοποιήθηκε καμία χρέωση. Τα προϊόντα σας παραμένουν στο καλάθι και τα στοιχεία
+            σας έχουν διατηρηθεί, ώστε να δοκιμάσετε ξανά με διαφορετική κάρτα.
           </p>
         </>
       )}
       <Button asChild variant="outline" className="mt-8">
-        <Link to="/">Επιστροφή στο κατάστημα</Link>
+        <Link to="/checkout">Επιστροφή στο ταμείο</Link>
       </Button>
+      <p className="mt-3 text-center text-sm text-muted-foreground">
+        <Link to="/" className="underline underline-offset-4">
+          Επιστροφή στο κατάστημα
+        </Link>
+      </p>
       <ReviewModal open={reviewModalOpen} onOpenChange={setReviewModalOpen} />
     </div>
   );

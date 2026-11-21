@@ -5,6 +5,17 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { resolveSimulatedPayment } from "@/lib/orders";
+import { useCartStore } from "@/stores/cartStore";
+
+const CHECKOUT_DRAFT_KEY = "pilinimorfi_checkout_draft";
+
+function clearCheckoutDraft() {
+  try {
+    sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 const searchSchema = z.object({ orderId: z.string().uuid().optional() });
 
@@ -21,6 +32,7 @@ export const Route = createFileRoute("/mock-payment")({
 
 function MockPaymentPage() {
   const { orderId } = Route.useSearch();
+  const clearLocalCart = useCartStore((state) => state.clearLocalCart);
   const mutation = useMutation({
     mutationFn: (result: "success" | "failure") => {
       if (!orderId) throw new Error("Δεν βρέθηκε δοκιμαστική παραγγελία.");
@@ -64,7 +76,11 @@ function MockPaymentPage() {
           <Button
             type="button"
             disabled={!orderId || mutation.isPending}
-            onClick={() => mutation.mutate("success")}
+            onClick={() => {
+              clearLocalCart();
+              clearCheckoutDraft();
+              mutation.mutate("success");
+            }}
           >
             <CheckCircle2 className="mr-2 size-4" />
             Προσομοίωση επιτυχίας

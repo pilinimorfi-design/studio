@@ -32,17 +32,69 @@ type CheckoutFieldErrors = Partial<Record<CheckoutField, string | undefined>>;
 type LegalConsentField = "acceptPrivacy" | "acceptTerms";
 type LegalConsentErrors = Partial<Record<LegalConsentField, string>>;
 
+type CheckoutDraft = {
+  customerName: string;
+  email: string;
+  phone: string;
+  shippingAddress: string;
+  shippingNotes: string;
+  shippingMethod: ShippingMethod;
+  paymentMethod: PaymentMethod;
+  postalCode: string;
+  city: string;
+  village: string;
+  county: string;
+  selectedLockers: Record<number, BoxNowLocker>;
+};
+
+const CHECKOUT_DRAFT_KEY = "pilinimorfi_checkout_draft";
+
+function loadDraft(): Partial<CheckoutDraft> | null {
+  try {
+    const raw = sessionStorage.getItem(CHECKOUT_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") return parsed as Partial<CheckoutDraft>;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(draft: Partial<CheckoutDraft>) {
+  try {
+    sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // sessionStorage may be unavailable or quota-exceeded; ignore silently.
+  }
+}
+
+function clearDraft() {
+  try {
+    sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 export function CheckoutPage() {
   const items = useCartStore((state) => state.items);
   const cartToken = useCartStore((state) => state.cartToken);
-  const clearLocalCart = useCartStore((state) => state.clearLocalCart);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("everypay");
-  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("boxnow");
-  const [selectedLockers, setSelectedLockers] = useState<Record<number, BoxNowLocker>>({});
-  const [postalCode, setPostalCode] = useState("");
-  const [city, setCity] = useState("");
-  const [village, setVillage] = useState("");
-  const [county, setCounty] = useState("");
+  const draft = loadDraft();
+
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
+    draft?.paymentMethod ?? "everypay",
+  );
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>(
+    draft?.shippingMethod ?? "boxnow",
+  );
+  const [selectedLockers, setSelectedLockers] = useState<Record<number, BoxNowLocker>>(
+    draft?.selectedLockers ?? {},
+  );
+  const [postalCode, setPostalCode] = useState(draft?.postalCode ?? "");
+  const [city, setCity] = useState(draft?.city ?? "");
+  const [village, setVillage] = useState(draft?.village ?? "");
+  const [county, setCounty] = useState(draft?.county ?? "");
   const [postalCodeStatus, setPostalCodeStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -50,7 +102,42 @@ export function CheckoutPage() {
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [consentErrors, setConsentErrors] = useState<LegalConsentErrors>({});
+  const [customerName, setCustomerName] = useState(draft?.customerName ?? "");
+  const [email, setEmail] = useState(draft?.email ?? "");
+  const [phone, setPhone] = useState(draft?.phone ?? "");
+  const [shippingAddress, setShippingAddress] = useState(draft?.shippingAddress ?? "");
+  const [shippingNotes, setShippingNotes] = useState(draft?.shippingNotes ?? "");
   const simulationEnabled = import.meta.env.DEV;
+
+  useEffect(() => {
+    saveDraft({
+      customerName,
+      email,
+      phone,
+      shippingAddress,
+      shippingNotes,
+      shippingMethod,
+      paymentMethod,
+      postalCode,
+      city,
+      village,
+      county,
+      selectedLockers,
+    });
+  }, [
+    customerName,
+    email,
+    phone,
+    shippingAddress,
+    shippingNotes,
+    shippingMethod,
+    paymentMethod,
+    postalCode,
+    city,
+    village,
+    county,
+    selectedLockers,
+  ]);
   const cityWasEdited = useRef(false);
   const countyWasEdited = useRef(false);
   const subtotal = items.reduce(
@@ -243,25 +330,19 @@ export function CheckoutPage() {
       setSubmitError("Δεν βρέθηκε το ενεργό καλάθι. Ανανεώστε τη σελίδα και δοκιμάστε ξανά.");
       return;
     }
-    const formData = new FormData(event.currentTarget);
-    const customerName = String(formData.get("customerName") ?? "").trim();
-    const email = String(formData.get("email") ?? "").trim();
-    const phone = String(formData.get("phone") ?? "").trim();
-    const shippingAddress = String(formData.get("shippingAddress") ?? "").trim();
-    const shippingNotes = String(formData.get("shippingNotes") ?? "").trim();
     const municipality = city.trim();
     const villageName = village.trim();
     const shippingCity = shippingMethod === "acs" ? `${municipality} / ${villageName}` : "";
     const shippingCounty = county.trim();
     const errors: CheckoutFieldErrors = {};
     const fieldValues: Array<[CheckoutField, string]> = [
-      ["customerName", customerName],
-      ["email", email],
-      ["phone", phone],
+      ["customerName", customerName.trim()],
+      ["email", email.trim()],
+      ["phone", phone.trim()],
     ];
     if (shippingMethod === "acs") {
       fieldValues.push(
-        ["shippingAddress", shippingAddress],
+        ["shippingAddress", shippingAddress.trim()],
         ["postalCode", postalCode],
         ["city", municipality],
         ["village", villageName],
@@ -270,7 +351,7 @@ export function CheckoutPage() {
     } else if (activeBoxNowPackage >= 0) {
       errors.locker = getFieldError("locker", "");
     }
-    fieldValues.push(["shippingNotes", shippingNotes]);
+    fieldValues.push(["shippingNotes", shippingNotes.trim()]);
     for (const [field, value] of fieldValues) {
       const message = getFieldError(field, value, municipality, villageName);
       if (message) errors[field] = message;
@@ -303,9 +384,9 @@ export function CheckoutPage() {
       const checkout = await createSimulatedOrder({
         data: {
           cartToken,
-          customerName,
-          email,
-          phone,
+          customerName: customerName.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
           shippingMethod,
           lockerId: selectedLockers[0]?.id ?? "",
           lockerName: selectedLockers[0]?.name ?? "",
@@ -337,14 +418,27 @@ export function CheckoutPage() {
                     locker: null,
                   },
                 ],
-          shippingAddress,
+          shippingAddress: shippingAddress.trim(),
           shippingPostalCode: postalCode,
           shippingCity,
           shippingCounty,
-          shippingNotes,
+          shippingNotes: shippingNotes.trim(),
         },
       });
-      clearLocalCart();
+      saveDraft({
+        customerName,
+        email,
+        phone,
+        shippingAddress,
+        shippingNotes,
+        shippingMethod,
+        paymentMethod,
+        postalCode,
+        city,
+        village,
+        county,
+        selectedLockers,
+      });
       window.location.assign(checkout.paymentUrl);
     } catch (error) {
       const serverErrors = getServerValidationErrors(error);
@@ -457,6 +551,12 @@ export function CheckoutPage() {
             noValidate
             onSubmit={(event) => void submitSimulatedCheckout(event)}
           >
+            <p className="mt-2 text-xs text-muted-foreground">
+              Τα στοιχεία που συμπληρώνετε αποθηκεύονται προσωρινά στην μνήμη συνεδρίας του
+              περιηγητή σας (sessionStorage) μόνο για να είναι εύκολη η επανάληψη στην περίπτωση
+              αποτυχίας πληρωμής. Διαγράφονται αυτόματα μόλις ολοκληρωθεί επιτυχώς η πληρωμή ή
+              κλείσετε την καρτέλα.
+            </p>
             <div className="space-y-5">
               <div>
                 <label htmlFor="checkout-name" className="mb-1.5 block text-sm font-medium">
@@ -467,12 +567,16 @@ export function CheckoutPage() {
                   name="customerName"
                   autoComplete="name"
                   required
+                  value={customerName}
                   aria-invalid={Boolean(fieldErrors.customerName)}
                   aria-describedby={
                     fieldErrors.customerName ? "checkout-customerName-error" : undefined
                   }
                   onBlur={(event) => validateField("customerName", event.target.value)}
-                  onChange={(event) => updateFieldError("customerName", event.target.value)}
+                  onChange={(event) => {
+                    setCustomerName(event.target.value);
+                    updateFieldError("customerName", event.target.value);
+                  }}
                 />
                 {renderFieldError("customerName")}
               </div>
@@ -486,10 +590,14 @@ export function CheckoutPage() {
                   type="email"
                   autoComplete="email"
                   required
+                  value={email}
                   aria-invalid={Boolean(fieldErrors.email)}
                   aria-describedby={fieldErrors.email ? "checkout-email-error" : undefined}
                   onBlur={(event) => validateField("email", event.target.value)}
-                  onChange={(event) => updateFieldError("email", event.target.value)}
+                  onChange={(event) => {
+                    setEmail(event.target.value);
+                    updateFieldError("email", event.target.value);
+                  }}
                 />
                 {renderFieldError("email")}
               </div>
@@ -504,10 +612,14 @@ export function CheckoutPage() {
                   autoComplete="tel"
                   inputMode="numeric"
                   required
+                  value={phone}
                   aria-invalid={Boolean(fieldErrors.phone)}
                   aria-describedby={fieldErrors.phone ? "checkout-phone-error" : undefined}
                   onBlur={(event) => validateField("phone", event.target.value)}
-                  onChange={(event) => updateFieldError("phone", event.target.value)}
+                  onChange={(event) => {
+                    setPhone(event.target.value);
+                    updateFieldError("phone", event.target.value);
+                  }}
                 />
                 {renderFieldError("phone")}
               </div>
@@ -700,12 +812,16 @@ export function CheckoutPage() {
                     name="shippingAddress"
                     autoComplete="street-address"
                     required
+                    value={shippingAddress}
                     aria-invalid={Boolean(fieldErrors.shippingAddress)}
                     aria-describedby={
                       fieldErrors.shippingAddress ? "checkout-shippingAddress-error" : undefined
                     }
                     onBlur={(event) => validateField("shippingAddress", event.target.value)}
-                    onChange={(event) => updateFieldError("shippingAddress", event.target.value)}
+                    onChange={(event) => {
+                      setShippingAddress(event.target.value);
+                      updateFieldError("shippingAddress", event.target.value);
+                    }}
                   />
                   {renderFieldError("shippingAddress")}
                 </div>
@@ -721,12 +837,16 @@ export function CheckoutPage() {
                     name="shippingNotes"
                     placeholder="Πρόσθεσε σχόλια παράδοσης"
                     autoComplete="off"
+                    value={shippingNotes}
                     aria-invalid={Boolean(fieldErrors.shippingNotes)}
                     aria-describedby={
                       fieldErrors.shippingNotes ? "checkout-shippingNotes-error" : undefined
                     }
                     onBlur={(event) => validateField("shippingNotes", event.target.value)}
-                    onChange={(event) => updateFieldError("shippingNotes", event.target.value)}
+                    onChange={(event) => {
+                      setShippingNotes(event.target.value);
+                      updateFieldError("shippingNotes", event.target.value);
+                    }}
                   />
                   {renderFieldError("shippingNotes")}
                 </div>
@@ -839,65 +959,16 @@ export function CheckoutPage() {
               <div>
                 <div className="flex items-start gap-3">
                   <Checkbox
-                    id="checkout-accept-privacy"
-                    name="acceptPrivacy"
-                    required
-                    checked={acceptPrivacy}
-                    onCheckedChange={(checked) => {
-                      const next = checked === true;
-                      setAcceptPrivacy(next);
-                      if (next) validateConsents(true, acceptTerms);
-                      else
-                        setConsentErrors((current) => {
-                          const { acceptPrivacy: _omitPrivacy, ...rest } = current;
-                          return rest;
-                        });
-                    }}
-                    aria-invalid={Boolean(consentErrors.acceptPrivacy)}
-                    aria-describedby={
-                      consentErrors.acceptPrivacy ? "checkout-accept-privacy-error" : undefined
-                    }
-                    className="mt-0.5"
-                  />
-                  <label htmlFor="checkout-accept-privacy" className="text-sm leading-relaxed">
-                    Διάβασα και αποδέχομαι την{" "}
-                    <Link
-                      to="/privacy"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-foreground underline underline-offset-4"
-                    >
-                      Πολιτική Απορρήτου
-                    </Link>
-                    . <span className="text-destructive">*</span>
-                  </label>
-                </div>
-                {consentErrors.acceptPrivacy && (
-                  <p
-                    id="checkout-accept-privacy-error"
-                    role="alert"
-                    className="mt-1.5 text-sm text-destructive"
-                  >
-                    {consentErrors.acceptPrivacy}
-                  </p>
-                )}
-              </div>
-              <div>
-                <div className="flex items-start gap-3">
-                  <Checkbox
                     id="checkout-accept-terms"
                     name="acceptTerms"
                     required
                     checked={acceptTerms}
                     onCheckedChange={(checked) => {
-                      const next = checked === true;
-                      setAcceptTerms(next);
-                      if (next) validateConsents(acceptPrivacy, true);
-                      else
-                        setConsentErrors((current) => {
-                          const { acceptTerms: _omitTerms, ...rest } = current;
-                          return rest;
-                        });
+                      setAcceptTerms(checked === true);
+                      setConsentErrors((current) => {
+                        const { acceptTerms: _omitTerms, ...rest } = current;
+                        return rest;
+                      });
                     }}
                     aria-invalid={Boolean(consentErrors.acceptTerms)}
                     aria-describedby={
@@ -925,6 +996,49 @@ export function CheckoutPage() {
                     className="mt-1.5 text-sm text-destructive"
                   >
                     {consentErrors.acceptTerms}
+                  </p>
+                )}
+              </div>
+              <div>
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="checkout-accept-privacy"
+                    name="acceptPrivacy"
+                    required
+                    checked={acceptPrivacy}
+                    onCheckedChange={(checked) => {
+                      setAcceptPrivacy(checked === true);
+                      setConsentErrors((current) => {
+                        const { acceptPrivacy: _omitPrivacy, ...rest } = current;
+                        return rest;
+                      });
+                    }}
+                    aria-invalid={Boolean(consentErrors.acceptPrivacy)}
+                    aria-describedby={
+                      consentErrors.acceptPrivacy ? "checkout-accept-privacy-error" : undefined
+                    }
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="checkout-accept-privacy" className="text-sm leading-relaxed">
+                    Διάβασα και αποδέχομαι την{" "}
+                    <Link
+                      to="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-foreground underline underline-offset-4"
+                    >
+                      Πολιτική Απορρήτου
+                    </Link>
+                    . <span className="text-destructive">*</span>
+                  </label>
+                </div>
+                {consentErrors.acceptPrivacy && (
+                  <p
+                    id="checkout-accept-privacy-error"
+                    role="alert"
+                    className="mt-1.5 text-sm text-destructive"
+                  >
+                    {consentErrors.acceptPrivacy}
                   </p>
                 )}
               </div>

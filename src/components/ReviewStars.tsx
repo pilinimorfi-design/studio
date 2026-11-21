@@ -10,24 +10,29 @@ export function StarRatingPicker({
   onChange: (value: number) => void;
   disabled?: boolean;
 }) {
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const displayRating = hoverRating !== null ? hoverRating : value;
+
   return (
     <div role="group" aria-label="Αξιολόγηση από 1 έως 5 αστέρια" className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((rating) => (
-        <button
-          key={rating}
-          type="button"
-          aria-label={`${rating} ${rating === 1 ? "αστέρι" : "αστέρια"}`}
-          aria-pressed={value === rating}
-          disabled={disabled}
-          onClick={() => onChange(rating)}
-          className="rounded-sm p-1 text-amber-500 transition-colors hover:text-amber-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <Star
-            className="size-8"
-            fill={value !== null && rating <= value ? "currentColor" : "none"}
-          />
-        </button>
-      ))}
+      {[1, 2, 3, 4, 5].map((rating) => {
+        const fill = rating <= (displayRating ?? 0);
+        return (
+          <button
+            key={rating}
+            type="button"
+            aria-label={`${rating} ${rating === 1 ? "αστέρι" : "αστέρια"}`}
+            aria-pressed={value === rating}
+            disabled={disabled}
+            onClick={() => onChange(rating)}
+            onMouseEnter={() => setHoverRating(rating)}
+            onMouseLeave={() => setHoverRating(null)}
+            className="rounded-sm p-1 text-amber-500 transition-colors hover:text-amber-600 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Star className="size-8" fill={fill ? "currentColor" : "none"} />
+          </button>
+        );
+      })}
     </div>
   );
 }

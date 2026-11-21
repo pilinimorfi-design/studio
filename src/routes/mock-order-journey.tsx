@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, ChevronLeft, ChevronRight, PackageCheck, PackageOpen } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 } from "@/lib/order-email-templates";
 import { getSimulatedOrderJourney } from "@/lib/orders";
 import { formatPrice } from "@/lib/shopify";
+import { ReviewModal } from "@/components/ReviewModal";
 
 const searchSchema = z.object({ orderId: z.string().uuid().optional() });
 
@@ -30,6 +31,12 @@ export const Route = createFileRoute("/mock-order-journey")({
 function MockOrderJourneyPage() {
   const { orderId } = Route.useSearch();
   const [activeNotification, setActiveNotification] = useState(0);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setReviewModalOpen(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
   const query = useQuery({
     queryKey: ["mock-order-journey", orderId],
     queryFn: () => {
@@ -294,6 +301,7 @@ function MockOrderJourneyPage() {
           <Link to="/">Επιστροφή στο κατάστημα</Link>
         </Button>
       </div>
+      <ReviewModal open={reviewModalOpen} onOpenChange={setReviewModalOpen} />
     </div>
   );
 }

@@ -11,6 +11,11 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   const navigate = useNavigate();
   const addItem = useCartStore((state) => state.addItem);
   const isLoading = useCartStore((state) => state.isLoading);
+  const cartItems = useCartStore((state) => state.items);
+
+  const cartItem = cartItems.find((item) => item.product.id === product.id);
+  const cartQuantity = cartItem?.quantity ?? 0;
+  const atMaxStock = cartQuantity >= product.stock;
 
   async function addToCart() {
     try {
@@ -24,11 +29,9 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   }
 
   async function buyNow() {
-    try {
+    const alreadyInCart = cartItems.some((item) => item.product.id === product.id);
+    if (!alreadyInCart) {
       await addItem(product);
-    } catch {
-      // Αν το προϊόν είναι ήδη στο μέγιστο απόθεμά του στο καλάθι,
-      // συνεχίστε προς το ταμείο χωρίς να μπλοκάρετε τον χρήστη.
     }
     navigate({ to: "/checkout" });
   }
@@ -77,15 +80,15 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         <div className="mt-auto flex flex-col gap-1 pt-4">
           <Button
             variant="default"
-            className="relative z-10 border border-input bg-background text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
+            className="relative z-10 border border-input bg-background text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed text-sm"
             onClick={() => void addToCart()}
-            disabled={isLoading || product.stock <= 0}
+            disabled={isLoading || product.stock <= 0 || atMaxStock}
           >
-            Προσθήκη στο καλάθι
+            {atMaxStock ? "Βρίσκεται στο καλάθι" : "Προσθήκη στο καλάθι"}
           </Button>
           <Button
             variant="default"
-            className="relative z-10 h-8 border border-input bg-background text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
+            className="relative z-10 h-8 border border-input bg-background text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed text-sm"
             onClick={() => void buyNow()}
             disabled={isLoading || product.stock <= 0}
           >
