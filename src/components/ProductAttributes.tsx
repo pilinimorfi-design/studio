@@ -12,7 +12,7 @@ export function ProductAttributes({ product, packaging = false }: ProductAttribu
       value: `${product.weightGrams} g`,
     },
     (product.heightCm != null || product.lengthCm != null || product.widthCm != null) && {
-      label: packaging ? "Διαστάσεις (με συσκευασία)" : "Διαστάσεις",
+      label: "Διαστάσεις",
       value: packaging
         ? `Υ: ${Number((Number(product.heightCm) + 1).toFixed(2))} Μ: ${Number((Number(product.lengthCm) + 1).toFixed(2))} Π: ${Number((Number(product.widthCm) + 1).toFixed(2))} cm`
         : `Υ: ${product.heightCm ?? ""} Μ: ${product.lengthCm ?? ""} Π: ${product.widthCm ?? ""} cm`,
