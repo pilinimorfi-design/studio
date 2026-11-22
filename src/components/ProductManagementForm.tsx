@@ -375,8 +375,9 @@ export function ProductManagementForm() {
               <fieldset>
                 <legend className="mb-1.5 block text-sm font-medium">Διαστάσεις (cm)</legend>
                 <p className="mb-3 text-xs text-muted-foreground">
-                  Χρησιμοποιούνται για τον υπολογισμό όγκου και τον αυτόματο χωρισμό σε δέματα.
-                  Συμπεριλάβετε τη συσκευασία προστασίας.
+                  Καταχωρίστε τις πραγματικές διαστάσεις του προϊόντος (επιτρέπονται και δεκαδικά,
+                  π.χ. 1.1). Για τη συσκευασία αποστολής προστίθεται αυτόματα +1 cm σε κάθε
+                  διάσταση.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div>

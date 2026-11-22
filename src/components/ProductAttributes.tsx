@@ -2,17 +2,20 @@ import type { CatalogProduct } from "@/lib/shopify";
 
 type ProductAttributesProps = {
   product: CatalogProduct;
+  packaging?: boolean;
 };
 
-export function ProductAttributes({ product }: ProductAttributesProps) {
+export function ProductAttributes({ product, packaging = false }: ProductAttributesProps) {
   const attributes = [
     typeof product.weightGrams === "number" && {
       label: "Βάρος",
       value: `${product.weightGrams} g`,
     },
     (product.heightCm != null || product.lengthCm != null || product.widthCm != null) && {
-      label: "Διαστάσεις",
-      value: `Υ: ${product.heightCm ?? ""} Μ: ${product.lengthCm ?? ""} Π: ${product.widthCm ?? ""} cm`,
+      label: packaging ? "Διαστάσεις (με συσκευασία)" : "Διαστάσεις",
+      value: packaging
+        ? `Υ: ${Number((Number(product.heightCm) + 1).toFixed(2))} Μ: ${Number((Number(product.lengthCm) + 1).toFixed(2))} Π: ${Number((Number(product.widthCm) + 1).toFixed(2))} cm`
+        : `Υ: ${product.heightCm ?? ""} Μ: ${product.lengthCm ?? ""} Π: ${product.widthCm ?? ""} cm`,
     },
     product.glazed != null && {
       label: "Υάλωμα",

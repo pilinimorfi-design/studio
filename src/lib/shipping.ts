@@ -1,9 +1,13 @@
 export const BOXNOW_PACKAGES = [
-  { size: "small", label: "Μικρό", heightCm: 8, lengthCm: 45, widthCm: 60, price: 4 },
-  { size: "medium", label: "Μεσαίο", heightCm: 17, lengthCm: 45, widthCm: 60, price: 5 },
-  { size: "large", label: "Μεγάλο", heightCm: 36, lengthCm: 45, widthCm: 60, price: 10 },
+  { size: "small", label: "Μικρό", heightCm: 7, lengthCm: 44, widthCm: 59, price: 4 },
+  { size: "medium", label: "Μεσαίο", heightCm: 16, lengthCm: 44, widthCm: 59, price: 5 },
+  { size: "large", label: "Μεγάλο", heightCm: 35, lengthCm: 44, widthCm: 59, price: 10 },
 ] as const;
 export const ACS_PRICE_PER_PARCEL = 12;
+
+export const FREE_SHIPPING_THRESHOLD = 70;
+
+export const PACKING_EFFICIENCY = 0.7;
 
 export type BoxNowPackageSize = (typeof BOXNOW_PACKAGES)[number]["size"];
 
@@ -36,7 +40,7 @@ function fitsLocker(
   const lockerSides = [locker.heightCm, locker.lengthCm, locker.widthCm].sort(
     (first, second) => second - first,
   );
-  return itemSides.every((side, index) => side <= lockerSides[index]);
+  return itemSides.every((side, index) => side <= lockerSides[index]!);
 }
 
 export function packBoxNowItems(items: readonly ShippingProduct[]): BoxNowPackingResult {
@@ -57,7 +61,11 @@ export function packBoxNowItems(items: readonly ShippingProduct[]): BoxNowPackin
       };
     }
 
-    const packedDimensions = dimensions.map((dimension) => dimension!);
+    const packedDimensions = [
+      Number((item.heightCm! + 1).toFixed(2)),
+      Number((item.lengthCm! + 1).toFixed(2)),
+      Number((item.widthCm! + 1).toFixed(2)),
+    ];
     const volumeCm3 = packedDimensions.reduce((volume, dimension) => volume * dimension, 1);
     if (
       volumeCm3 >
@@ -99,7 +107,7 @@ export function packBoxNowItems(items: readonly ShippingProduct[]): BoxNowPackin
         const largestItemVolume = Math.max(parcel.largestItemVolumeCm3, unit.volumeCm3);
         const size = BOXNOW_PACKAGES.find(
           (candidate) =>
-            candidate.heightCm * candidate.lengthCm * candidate.widthCm >=
+            candidate.heightCm * candidate.lengthCm * candidate.widthCm * PACKING_EFFICIENCY >=
               Math.max(totalVolume, largestItemVolume) &&
             [...parcel.itemDimensions, unit.dimensions].every((dimensions) =>
               fitsLocker(dimensions, candidate),
@@ -122,7 +130,7 @@ export function packBoxNowItems(items: readonly ShippingProduct[]): BoxNowPackin
       (() => {
         const parcelSize = BOXNOW_PACKAGES.find(
           (size) =>
-            size.heightCm * size.lengthCm * size.widthCm >= unit.volumeCm3 &&
+            size.heightCm * size.lengthCm * size.widthCm * PACKING_EFFICIENCY >= unit.volumeCm3 &&
             fitsLocker(unit.dimensions, size),
         )!;
         const created = {

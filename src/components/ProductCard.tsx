@@ -5,6 +5,7 @@ import { ProductAttributes } from "@/components/ProductAttributes";
 import { useCartStore } from "@/stores/cartStore";
 
 import { formatPrice, type CatalogProduct } from "@/lib/shopify";
+import { ShareProductButton } from "@/components/ShareProductButton";
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
   const image = product.imageUrl;
@@ -36,6 +37,14 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
     navigate({ to: "/checkout" });
   }
 
+  function saveScrollAndNavigate() {
+    try {
+      sessionStorage.setItem("pilinimorfi_home_scroll", String(window.scrollY));
+    } catch {
+      // ignore
+    }
+  }
+
   return (
     <article className="group relative flex h-full flex-col border-[#C27D5E]/50 hover:border-[#C27D5E] border-[1px] rounded-xl bg-transparent p-4 shadow-soft">
       <Link
@@ -43,6 +52,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         params={{ handle: product.handle }}
         tabIndex={-1}
         aria-hidden="true"
+        onClick={saveScrollAndNavigate}
         className="block overflow-hidden rounded-md bg-muted shadow-soft"
       >
         {image ? (
@@ -63,6 +73,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           <Link
             to="/product/$handle"
             params={{ handle: product.handle }}
+            onClick={saveScrollAndNavigate}
             className="font-display text-lg leading-snug after:absolute after:inset-0 after:content-[''] hover:text-primary"
           >
             {product.title}
@@ -75,6 +86,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           {product.description}
         </div>
         <div className="mt-2">
+          <ShareProductButton product={product} className="relative z-10" />
           <ProductAttributes product={product} />
         </div>
         <div className="mt-auto flex flex-col gap-1 pt-4">

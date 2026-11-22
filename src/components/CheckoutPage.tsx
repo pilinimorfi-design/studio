@@ -11,7 +11,12 @@ import { BoxNowLockerPicker } from "@/components/BoxNowLockerPicker";
 import type { BoxNowLocker } from "@/lib/boxnow";
 import { createSimulatedOrder } from "@/lib/orders";
 import { lookupGreekPostalCode } from "@/lib/postal-code";
-import { ACS_PRICE_PER_PARCEL, BOXNOW_PACKAGES, packBoxNowItems } from "@/lib/shipping";
+import {
+  ACS_PRICE_PER_PARCEL,
+  BOXNOW_PACKAGES,
+  FREE_SHIPPING_THRESHOLD,
+  packBoxNowItems,
+} from "@/lib/shipping";
 import { useCartStore } from "@/stores/cartStore";
 import { formatPrice } from "@/lib/shopify";
 
@@ -159,8 +164,14 @@ export function CheckoutPage() {
     [items],
   );
   const boxNowShipping = boxNowPacking.packages.reduce((total, parcel) => total + parcel.price, 0);
+  const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const boxNowShippingCharged = isFreeShipping ? 0 : boxNowShipping;
   const shippingAmount =
-    shippingMethod === "boxnow" ? boxNowShipping : items.length > 0 ? ACS_PRICE_PER_PARCEL : 0;
+    shippingMethod === "boxnow"
+      ? boxNowShippingCharged
+      : items.length > 0
+        ? ACS_PRICE_PER_PARCEL
+        : 0;
   const orderTotal = subtotal + shippingAmount;
   const boxNowPackageKey = JSON.stringify(
     boxNowPacking.packages.map((parcel) => [
@@ -553,9 +564,8 @@ export function CheckoutPage() {
           >
             <p className="mt-2 text-xs text-muted-foreground">
               Τα στοιχεία που συμπληρώνετε αποθηκεύονται προσωρινά στην μνήμη συνεδρίας του
-              περιηγητή σας (sessionStorage) μόνο για να είναι εύκολη η επανάληψη στην περίπτωση
-              αποτυχίας πληρωμής. Διαγράφονται αυτόματα μόλις ολοκληρωθεί επιτυχώς η πληρωμή ή
-              κλείσετε την καρτέλα.
+              περιηγητή μόνο για να είναι εύκολη η επανάληψη στην περίπτωση αποτυχίας πληρωμής.
+              Διαγράφονται αυτόματα μόλις ολοκληρωθεί επιτυχώς η πληρωμή ή κλείσετε την καρτέλα.
             </p>
             <div className="space-y-5">
               <div>
@@ -658,7 +668,11 @@ export function CheckoutPage() {
                         ? boxNowPacking.error
                         : `${boxNowPacking.packages.length} ${
                             boxNowPacking.packages.length === 1 ? "δέμα" : "δέματα"
-                          } — ${formatPrice(boxNowShipping.toString(), "EUR")}. Η χρέωση περιλαμβάνει συσκευασία.`}
+                          } — ${
+                            isFreeShipping
+                              ? "Δωρεάν"
+                              : formatPrice(boxNowShipping.toString(), "EUR")
+                          }. Η χρέωση περιλαμβάνει συσκευασία.`}
                     </span>
                   </span>
                 </label>
@@ -679,9 +693,32 @@ export function CheckoutPage() {
               </RadioGroup>
             </fieldset>
 
+            {shippingMethod === "boxnow" && !boxNowPacking.error ? (
+              <div className="mt-4 p-3 rounded-lg border border-border bg-muted/50">
+                {isFreeShipping ? (
+                  <p className="text-sm font-medium text-foreground">
+                    Κερδίσατε δωρεάν μεταφορικά με BoxNow!
+                  </p>
+                ) : (
+                  <p className="text-sm font-medium text-foreground">
+                    Προσθέστε προϊόντα αξίας{" "}
+                    {formatPrice((FREE_SHIPPING_THRESHOLD - subtotal).toFixed(2), "EUR")} ακόμα για
+                    δωρεάν μεταφορικά με BoxNow!
+                  </p>
+                )}
+              </div>
+            ) : null}
+
             {shippingMethod === "acs" ? (
               <fieldset className="space-y-5">
                 <legend className="font-display text-xl">Διεύθυνση παράδοσης</legend>
+                {boxNowPacking.error && (
+                  <div className="mt-2 p-3 rounded-lg border border-border bg-muted/50">
+                    <p className="text-sm font-medium text-foreground">
+                      Η αποστολή γίνεται αποκλειστικά με Courier λόγω των διαστάσεων του προϊόντος.
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label
                     htmlFor="checkout-postal-code"
@@ -852,8 +889,8 @@ export function CheckoutPage() {
                 </div>
               </fieldset>
             ) : (
-              <fieldset className="space-y-4 rounded-md border border-border bg-muted/40 p-4">
-                <legend className="font-display text-xl">Δέματα και lockers BoxNow</legend>
+              <fieldset className="min-w-0 space-y-4 rounded-md border border-border bg-muted/40 p-4">
+                <legend className="px-2 font-display text-xl">Δέματα και lockers BoxNow</legend>
                 <p className="text-sm text-muted-foreground">
                   Ο όγκος των συσκευασμένων προϊόντων χωρίζει αυτόματα την παραγγελία σε δέματα.
                   Επιλέξτε ξεχωριστό locker για κάθε δέμα.
@@ -1106,7 +1143,11 @@ export function CheckoutPage() {
                     <span>
                       Μεταφορικά BoxNow — δέμα {index + 1} ({parcelSize.label})
                     </span>
-                    <span>{formatPrice(parcel.price.toString(), "EUR")}</span>
+                    <span>
+                      {isFreeShipping
+                        ? "Δωρεάν (0,00 €)"
+                        : formatPrice(parcel.price.toString(), "EUR")}
+                    </span>
                   </li>
                 );
               })

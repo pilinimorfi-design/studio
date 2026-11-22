@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { formatPrice } from "@/lib/shopify";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { useCartStore } from "@/stores/cartStore";
 
 export function CartDrawer() {
@@ -129,6 +130,18 @@ export function CartDrawer() {
                 <span>Μερικό σύνολο</span>
                 <span>{formatPrice(totalPrice.toString(), "EUR")}</span>
               </div>
+              {totalPrice < FREE_SHIPPING_THRESHOLD && (
+                <p className="text-sm font-medium text-muted-foreground">
+                  Προσθέστε προϊόντα αξίας{" "}
+                  {formatPrice((FREE_SHIPPING_THRESHOLD - totalPrice).toFixed(2), "EUR")} ακόμα για
+                  δωρεάν μεταφορικά με BoxNow!
+                </p>
+              )}
+              {totalPrice >= FREE_SHIPPING_THRESHOLD && (
+                <p className="text-sm font-medium text-foreground">
+                  Κερδίσατε δωρεάν μεταφορικά με BoxNow!
+                </p>
+              )}
               <Button asChild size="lg" className="w-full">
                 <Link to="/checkout" onClick={() => setOpen(false)}>
                   Συνέχεια στο ταμείο

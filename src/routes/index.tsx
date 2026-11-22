@@ -60,6 +60,14 @@ function Index() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
+    const savedScroll = sessionStorage.getItem("pilinimorfi_home_scroll");
+    if (savedScroll && !products.isLoading && products.data) {
+      window.scrollTo({ top: Number(savedScroll), behavior: "instant" });
+      sessionStorage.removeItem("pilinimorfi_home_scroll");
+    }
+  }, [products.isLoading, products.data]);
+
+  useEffect(() => {
     let mounted = true;
     getClientIpHash().then((hash) => {
       if (mounted) setIpHash(hash);

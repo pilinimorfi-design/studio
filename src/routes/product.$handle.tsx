@@ -1,9 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ProductAttributes } from "@/components/ProductAttributes";
+import { ShareProductButton } from "@/components/ShareProductButton";
 import { productQuery, productDetailsQuery } from "@/lib/queries";
 import { formatPrice } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
@@ -39,6 +40,7 @@ function ProductPage() {
   const { data: product, isLoading } = useQuery(productQuery(handle));
   const { data: details } = useQuery(productDetailsQuery);
   const navigate = useNavigate();
+  const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const cartLoading = useCartStore((state) => state.isLoading);
   const cartItems = useCartStore((state) => state.items);
@@ -78,13 +80,15 @@ function ProductPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      <button
+        onClick={() => {
+          router.history.back();
+        }}
+        className="inline-flex items-center gap-1 text-sm cursor-pointer text-primary hover:text-primary/80 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Πίσω
-      </Link>
+      </button>
       <div className="mt-6 grid gap-10 md:grid-cols-2">
         <div>
           <div className="overflow-hidden rounded-md bg-muted">
@@ -139,11 +143,12 @@ function ProductPage() {
             <section className="mt-10 border-t pt-6">
               <h2 className="font-display text-xl">Χαρακτηριστικά</h2>
               <div className="mt-3">
-                <ProductAttributes product={p} />
+                <ShareProductButton product={p} />
+                <ProductAttributes product={p} packaging />
                 {(p.heightCm != null || p.lengthCm != null || p.widthCm != null) && (
                   <p className="mt-4 w-fit border-x-2 border-primary/40 px-3 text-sm text-muted-foreground">
                     <span className="font-medium text-primary">Σημείωση:</span> Οι διαστάσεις
-                    υπολογίζονται μαζί με τη συσκευασία αποστολής.
+                    υπολογίζονται μαζί με τη συσκευασία.
                   </p>
                 )}
               </div>
@@ -153,8 +158,11 @@ function ProductPage() {
             <h2 className="font-display text-xl">Οδηγίες φροντίδας</h2>
             <ul className="mt-2 list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
               {(p.care
-                ? p.care.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
-                : details?.care ?? []
+                ? p.care
+                    .split(/\r?\n/)
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                : (details?.care ?? [])
               ).map((line) => (
                 <li key={line}>{line}</li>
               ))}
