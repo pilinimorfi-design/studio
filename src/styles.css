@@ -21,6 +21,7 @@
 @theme inline {
   --font-display: "Literata", Georgia, serif;
   --font-sans: "Manrope", system-ui, sans-serif;
+  --font-rounded: "Nunito", system-ui, sans-serif;
   --color-clay-deep: var(--clay-deep);
   --color-clay-deep-foreground: var(--clay-deep-foreground);
   --shadow-soft: var(--shadow-soft);

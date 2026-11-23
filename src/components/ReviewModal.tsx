@@ -49,7 +49,7 @@ export function ReviewModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogTitle className="font-display text-xl text-center">Αξιολογήστε μας</DialogTitle>
+        <DialogTitle className="font-bold text-xl text-center">Αξιολογήστε μας</DialogTitle>
         <DialogDescription className="mt-2 text-sm text-muted-foreground text-center">
           Πώς σας φάνηκε η εμπειρία σας;
         </DialogDescription>

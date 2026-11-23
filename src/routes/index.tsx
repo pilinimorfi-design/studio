@@ -392,11 +392,17 @@ function Index() {
           showCookiePolicyLink={true}
           linkHref="/cookies?from=modal"
           message={
-            <p className="leading-relaxed">
-              Καλώς ήρθατε στο εργαστήριο κεραμικής «Πήλινη Μορφή». Χρησιμοποιούμε μόνο τα απολύτως
-              απαραίτητα τεχνικά στοιχεία για τη βασική λειτουργία του ιστότοπου και του καλαθιού
-              αγορών, χωρίς cookies παρακολούθησης ή διαφήμισης.
-            </p>
+            <div className="space-y-2">
+              <div>
+                <div>Καλώς ήρθατε στο εργαστήριο αγγειοπλαστικής</div>
+                <div className="font-bold text-primary mt-0.5">
+                  «Πήλινη Μορφή»
+                </div>
+              </div>
+              <p className="text-sm leading-relaxed">
+                Χρησιμοποιούμε μόνο τα απολύτως απαραίτητα τεχνικά στοιχεία για τη λειτουργία του ιστότοπου και του καλαθιού, χωρίς cookies παρακολούθησης ή διαφήμισης.
+              </p>
+            </div>
           }
           primaryLabel="Αποδοχή"
           primaryVariant="default"

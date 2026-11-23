@@ -60,7 +60,7 @@ export function CookieBanner({
       {open && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
           <div className="pointer-events-none backdrop-blur-sm bg-black/40 fixed inset-0"></div>
-          <div className="pointer-events-auto flex flex-col gap-4 w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-xl bg-card border border-border shadow-2xl px-6 pb-6 pt-10 sm:px-8 sm:pt-11 text-sm sm:text-[15px] leading-relaxed text-card-foreground relative z-10 my-auto">
+          <div className="pointer-events-auto flex flex-col gap-4 w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-xl bg-card border border-border shadow-2xl px-6 pb-6 pt-10 sm:px-8 sm:pt-11 text-sm sm:text-[15px] leading-relaxed text-card-foreground relative z-10 my-auto font-rounded">
             <button
               onClick={onClose}
               className="absolute right-3.5 top-3.5 flex items-center justify-center size-7 rounded-md border border-primary/30 bg-primary/10 text-primary font-bold text-sm cursor-pointer transition-all duration-200 hover:scale-105 hover:bg-primary hover:text-primary-foreground hover:border-primary shadow-sm transform-gpu"
@@ -68,10 +68,10 @@ export function CookieBanner({
             >
               Χ
             </button>
-            <div className="text-center leading-relaxed px-2 sm:px-4">
+            <div className="text-center leading-relaxed px-2 sm:px-4 pt-1 sm:pt-1.5">
               {message}
               {showCookiePolicyLink && (
-                <div className="mt-4 text-center">
+                <div className="mt-2 text-center">
                   <a
                     href={linkHref}
                     target="_blank"
@@ -115,7 +115,7 @@ export function CookieBanner({
       {showSettings && settingsOpen && (
         <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
           <DialogContent className="sm:max-w-md p-6">
-            <DialogTitle className="font-display text-xl text-stone-900">
+            <DialogTitle className="font-bold text-xl text-stone-900">
               Ρυθμίσεις Cookies
             </DialogTitle>
             <DialogDescription className="mt-2 text-sm text-muted-foreground leading-relaxed">
