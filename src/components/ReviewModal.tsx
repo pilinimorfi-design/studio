@@ -49,15 +49,17 @@ export function ReviewModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogTitle className="font-display text-xl">Αξιολογήστε μας</DialogTitle>
-        <DialogDescription className="mt-2 text-sm text-muted-foreground">
+        <DialogTitle className="font-display text-xl text-center">Αξιολογήστε μας</DialogTitle>
+        <DialogDescription className="mt-2 text-sm text-muted-foreground text-center">
           Πώς σας φάνηκε η εμπειρία σας;
         </DialogDescription>
-        <div className="mt-6 flex flex-col items-center gap-3">
+        <div className="mt-6 flex flex-col items-center gap-3 text-center">
           <StarRatingPicker value={null} onChange={handleRate} disabled={submitting || rated} />
           {submitting && <p className="text-xs text-muted-foreground">Αποθήκευση…</p>}
           {rated && (
-            <p className="text-xs font-medium text-primary">Ευχαριστούμε για την εμπιστοσύνη σας!</p>
+            <p className="text-xs font-medium text-primary">
+              Ευχαριστούμε για την εμπιστοσύνη σας!
+            </p>
           )}
         </div>
       </DialogContent>

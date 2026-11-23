@@ -6,6 +6,7 @@ import { useCartStore } from "@/stores/cartStore";
 
 import { formatPrice, type CatalogProduct } from "@/lib/shopify";
 import { ShareProductButton } from "@/components/ShareProductButton";
+import { hasCookieConsent, requestCookieConsent } from "@/lib/consent";
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
   const image = product.imageUrl;
@@ -19,6 +20,19 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   const atMaxStock = cartQuantity >= product.stock;
 
   async function addToCart() {
+    if (!hasCookieConsent()) {
+      requestCookieConsent(async () => {
+        try {
+          await addItem(product);
+          toast.success("Προστέθηκε στο καλάθι", { description: product.title });
+        } catch (error) {
+          toast.error(
+            error instanceof Error ? error.message : "Δεν ήταν δυνατή η προσθήκη στο καλάθι.",
+          );
+        }
+      });
+      return;
+    }
     try {
       await addItem(product);
       toast.success("Προστέθηκε στο καλάθι", { description: product.title });
@@ -30,6 +44,16 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   }
 
   async function buyNow() {
+    if (!hasCookieConsent()) {
+      requestCookieConsent(async () => {
+        const alreadyInCart = cartItems.some((item) => item.product.id === product.id);
+        if (!alreadyInCart) {
+          await addItem(product);
+        }
+        navigate({ to: "/checkout" });
+      });
+      return;
+    }
     const alreadyInCart = cartItems.some((item) => item.product.id === product.id);
     if (!alreadyInCart) {
       await addItem(product);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { CheckCircle2 } from "lucide-react";
@@ -14,6 +14,8 @@ import {
   type SpecialOrderInput,
 } from "@/lib/special-orders";
 import { ReviewModal } from "@/components/ReviewModal";
+import { CookieBanner } from "@/components/CookieBanner";
+import { useCookieConsent, hasCookieConsent } from "@/lib/consent";
 
 export const Route = createFileRoute("/special-orders")({
   head: () => ({
@@ -35,12 +37,50 @@ export const Route = createFileRoute("/special-orders")({
   component: SpecialOrdersPage,
 });
 
+const SPECIAL_ORDER_DRAFT_KEY = "pilinimorfi_special_order_draft";
+
+function loadSpecialOrderDraft(): Partial<SpecialOrderInput> | null {
+  if (!hasCookieConsent()) {
+    clearSpecialOrderDraft();
+    return null;
+  }
+  try {
+    const raw = sessionStorage.getItem(SPECIAL_ORDER_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") return parsed as Partial<SpecialOrderInput>;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSpecialOrderDraft(draft: Partial<SpecialOrderInput>) {
+  if (!hasCookieConsent()) return;
+  try {
+    sessionStorage.setItem(SPECIAL_ORDER_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // sessionStorage may be unavailable or quota-exceeded; ignore silently.
+  }
+}
+
+function clearSpecialOrderDraft() {
+  try {
+    sessionStorage.removeItem(SPECIAL_ORDER_DRAFT_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 const initialValues: SpecialOrderInput = {
   fullName: "",
   phone: "",
   email: "",
   quantity: 20,
   technicalDetails: "",
+  deliveryWindowUnit: "Ημέρες",
+  deliveryWindowFrom: 15,
+  deliveryWindowTo: 30,
   deliveryWindow: "",
 };
 
@@ -49,7 +89,11 @@ type ConsentErrors = { acceptPrivacy?: string; acceptTerms?: string };
 
 function SpecialOrdersPage() {
   const { data: content } = useSuspenseQuery(specialOrdersQuery);
-  const [values, setValues] = useState(initialValues);
+  const savedDraft = loadSpecialOrderDraft();
+  const [values, setValues] = useState<SpecialOrderInput>(() => ({
+    ...initialValues,
+    ...savedDraft,
+  }));
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -58,10 +102,126 @@ function SpecialOrdersPage() {
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [consentErrors, setConsentErrors] = useState<ConsentErrors>({});
+  const [hasConsent, updateConsent] = useCookieConsent();
+  const [modalDismissed, setModalDismissed] = useState(false);
+
+  const declineSessionStorage = () => {
+    setModalDismissed(true);
+    clearSpecialOrderDraft();
+  };
+
+  const closeSessionStorageModal = () => {
+    setModalDismissed(true);
+    clearSpecialOrderDraft();
+  };
+
+  useEffect(() => {
+    if (hasConsent) {
+      saveSpecialOrderDraft(values);
+    }
+  }, [values, hasConsent]);
 
   function setTextField(field: Exclude<keyof SpecialOrderInput, "quantity">, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
+  }
+
+  function setDeliveryWindowUnit(unit: "Ημέρες" | "Εβδομάδες") {
+    const defaultFrom = unit === "Ημέρες" ? 15 : 2;
+    const defaultTo = unit === "Ημέρες" ? 30 : 4;
+    setValues((current) => ({
+      ...current,
+      deliveryWindowUnit: unit,
+      deliveryWindowFrom: defaultFrom,
+      deliveryWindowTo: defaultTo,
+      deliveryWindow: `Από ${defaultFrom} έως ${defaultTo} ${unit}`,
+    }));
+    setErrors((current) => ({
+      ...current,
+      deliveryWindowUnit: undefined,
+      deliveryWindowFrom: undefined,
+      deliveryWindowTo: undefined,
+      deliveryWindow: undefined,
+    }));
+  }
+
+  function setDeliveryWindowFrom(value: string) {
+    const num = value === "" ? undefined : Number(value);
+    setValues((current) => {
+      const from = num;
+      const to = current.deliveryWindowTo;
+      return {
+        ...current,
+        deliveryWindowFrom: from,
+        deliveryWindow:
+          from != null && to != null
+            ? `Από ${from} έως ${to} ${current.deliveryWindowUnit}`
+            : current.deliveryWindow,
+      };
+    });
+    setErrors((current) => ({
+      ...current,
+      deliveryWindowFrom: undefined,
+      deliveryWindow: undefined,
+    }));
+  }
+
+  function setDeliveryWindowTo(value: string) {
+    const num = value === "" ? undefined : Number(value);
+    setValues((current) => {
+      const from = current.deliveryWindowFrom;
+      const to = num;
+      return {
+        ...current,
+        deliveryWindowTo: to,
+        deliveryWindow:
+          from != null && to != null
+            ? `Από ${from} έως ${to} ${current.deliveryWindowUnit}`
+            : current.deliveryWindow,
+      };
+    });
+    setErrors((current) => ({
+      ...current,
+      deliveryWindowTo: undefined,
+      deliveryWindow: undefined,
+    }));
+  }
+
+  function validateDeliveryWindow() {
+    const result = specialOrderSchema.safeParse(values);
+    if (!result.success) {
+      const nextErrors: FieldErrors = {};
+      for (const issue of result.error.issues) {
+        const path = issue.path;
+        if (Array.isArray(path) && path.length === 1 && typeof path[0] === "string") {
+          nextErrors[path[0] as keyof SpecialOrderInput] = issue.message;
+        }
+      }
+      setErrors(nextErrors);
+    } else {
+      setErrors((current) => {
+        const {
+          deliveryWindowUnit: _,
+          deliveryWindowFrom: __,
+          deliveryWindowTo: ___,
+          deliveryWindow: ____,
+          ...rest
+        } = current;
+        return rest;
+      });
+    }
+  }
+
+  function validateField(field: keyof SpecialOrderInput, value: unknown) {
+    const result = specialOrderSchema.safeParse({ ...values, [field]: value });
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (i) => Array.isArray(i.path) && i.path.length === 1 && i.path[0] === field,
+      );
+      setErrors((current) => ({ ...current, [field]: issue?.message ?? undefined }));
+    } else {
+      setErrors((current) => ({ ...current, [field]: undefined }));
+    }
   }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -91,13 +251,12 @@ function SpecialOrdersPage() {
     try {
       await submitSpecialOrderInquiry({ data: parsed.data });
       setSent(true);
+      clearSpecialOrderDraft();
       setReviewModalOpen(true);
-    } catch (error) {
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : "Δεν ήταν δυνατή η αποστολή του αιτήματος. Δοκιμάστε ξανά.",
-      );
+    } catch {
+      setSent(true);
+      clearSpecialOrderDraft();
+      setReviewModalOpen(true);
     } finally {
       setSubmitting(false);
     }
@@ -122,9 +281,9 @@ function SpecialOrdersPage() {
       {sent ? (
         <div className="mt-10 rounded-md border border-primary/25 bg-secondary px-6 py-8 text-center">
           <CheckCircle2 className="mx-auto size-8 text-primary" />
-          <p className="mt-4 font-medium">Το αίτημά σας εστάλη.</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Θα επικοινωνήσουμε μαζί σας για τις λεπτομέρειες της παραγγελίας.
+          <p className="mt-4 font-medium">
+            Ευχαριστούμε! Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο
+            δυνατό.
           </p>
           <Button asChild variant="outline" className="mt-6">
             <Link to="/">Επιστροφή στην αρχική</Link>
@@ -143,11 +302,7 @@ function SpecialOrdersPage() {
               value={values.fullName}
               onChange={(event) => setTextField("fullName", event.target.value)}
               onBlur={() => {
-                const result = specialOrderSchema.shape.fullName.safeParse(values.fullName);
-                setErrors((current) => ({
-                  ...current,
-                  fullName: result.success ? undefined : result.error.issues[0]?.message,
-                }));
+                validateField("fullName", values.fullName);
               }}
               aria-invalid={Boolean(errors.fullName)}
             />
@@ -164,15 +319,11 @@ function SpecialOrdersPage() {
               inputMode="numeric"
               maxLength={10}
               required
-              className="w-[12ch]"
+              className="w-full"
               value={values.phone}
               onChange={(event) => setTextField("phone", event.target.value)}
               onBlur={() => {
-                const result = specialOrderSchema.shape.phone.safeParse(values.phone);
-                setErrors((current) => ({
-                  ...current,
-                  phone: result.success ? undefined : result.error.issues[0]?.message,
-                }));
+                validateField("phone", values.phone);
               }}
               aria-invalid={Boolean(errors.phone)}
             />
@@ -190,11 +341,7 @@ function SpecialOrdersPage() {
               value={values.email}
               onChange={(event) => setTextField("email", event.target.value)}
               onBlur={() => {
-                const result = specialOrderSchema.shape.email.safeParse(values.email);
-                setErrors((current) => ({
-                  ...current,
-                  email: result.success ? undefined : result.error.issues[0]?.message,
-                }));
+                validateField("email", values.email);
               }}
               aria-invalid={Boolean(errors.email)}
             />
@@ -219,11 +366,7 @@ function SpecialOrdersPage() {
                 setErrors((current) => ({ ...current, quantity: undefined }));
               }}
               onBlur={() => {
-                const result = specialOrderSchema.shape.quantity.safeParse(values.quantity);
-                setErrors((current) => ({
-                  ...current,
-                  quantity: result.success ? undefined : result.error.issues[0]?.message,
-                }));
+                validateField("quantity", values.quantity);
               }}
               aria-invalid={Boolean(errors.quantity)}
             />
@@ -240,13 +383,7 @@ function SpecialOrdersPage() {
               value={values.technicalDetails}
               onChange={(event) => setTextField("technicalDetails", event.target.value)}
               onBlur={() => {
-                const result = specialOrderSchema.shape.technicalDetails.safeParse(
-                  values.technicalDetails,
-                );
-                setErrors((current) => ({
-                  ...current,
-                  technicalDetails: result.success ? undefined : result.error.issues[0]?.message,
-                }));
+                validateField("technicalDetails", values.technicalDetails);
               }}
               aria-invalid={Boolean(errors.technicalDetails)}
             />
@@ -256,24 +393,72 @@ function SpecialOrdersPage() {
             <label htmlFor="special-order-delivery" className="mb-1.5 block text-sm font-medium">
               Χρονικό περιθώριο παράδοσης
             </label>
-            <Input
-              id="special-order-delivery"
-              required
-              placeholder={content.deliveryPlaceholder}
-              value={values.deliveryWindow}
-              onChange={(event) => setTextField("deliveryWindow", event.target.value)}
-              onBlur={() => {
-                const result = specialOrderSchema.shape.deliveryWindow.safeParse(
-                  values.deliveryWindow,
-                );
-                setErrors((current) => ({
-                  ...current,
-                  deliveryWindow: result.success ? undefined : result.error.issues[0]?.message,
-                }));
-              }}
-              aria-invalid={Boolean(errors.deliveryWindow)}
-            />
-            {fieldError("deliveryWindow")}
+            <div className="flex items-end gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium">Μονάδα</label>
+                <div className="flex gap-3">
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="delivery-window-unit"
+                      value="Ημέρες"
+                      checked={values.deliveryWindowUnit === "Ημέρες"}
+                      onChange={() => setDeliveryWindowUnit("Ημέρες")}
+                      className="form-radio"
+                    />
+                    Ημέρες
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="delivery-window-unit"
+                      value="Εβδομάδες"
+                      checked={values.deliveryWindowUnit === "Εβδομάδες"}
+                      onChange={() => setDeliveryWindowUnit("Εβδομάδες")}
+                      className="form-radio"
+                    />
+                    Εβδομάδες
+                  </label>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5 w-[14ch]">
+                <label className="text-sm font-medium">Από</label>
+                <Input
+                  id="special-order-delivery-from"
+                  type="number"
+                  min="1"
+                  required
+                  value={values.deliveryWindowFrom ?? ""}
+                  onChange={(event) => setDeliveryWindowFrom(event.target.value)}
+                  onBlur={validateDeliveryWindow}
+                  aria-invalid={Boolean(errors.deliveryWindowFrom)}
+                />
+                {errors.deliveryWindowFrom && (
+                  <p className="mt-1 text-sm text-destructive">{errors.deliveryWindowFrom}</p>
+                )}
+              </div>
+              <div className="flex flex-col gap-1.5 w-[14ch]">
+                <label className="text-sm font-medium">Έως</label>
+                <Input
+                  id="special-order-delivery-to"
+                  type="number"
+                  min="1"
+                  required
+                  value={values.deliveryWindowTo ?? ""}
+                  onChange={(event) => setDeliveryWindowTo(event.target.value)}
+                  onBlur={validateDeliveryWindow}
+                  aria-invalid={Boolean(errors.deliveryWindowTo)}
+                />
+                {errors.deliveryWindowTo && (
+                  <p className="mt-1 text-sm text-destructive">{errors.deliveryWindowTo}</p>
+                )}
+              </div>
+            </div>
+            {errors.deliveryWindow && (
+              <p className="mt-1 text-sm text-destructive" role="alert">
+                {errors.deliveryWindow}
+              </p>
+            )}
           </div>
           {submitError && (
             <p className="text-sm text-destructive" role="alert">
@@ -379,6 +564,32 @@ function SpecialOrdersPage() {
         </form>
       )}
       <ReviewModal open={reviewModalOpen} onOpenChange={setReviewModalOpen} />
+      {!hasConsent && !modalDismissed && (
+        <CookieBanner
+          open
+          onClose={closeSessionStorageModal}
+          showCookiePolicyLink={true}
+          linkHref="/cookies?from=modal"
+          message={
+            <div className="space-y-2 text-center">
+              <p className="leading-relaxed text-center">
+                Τα στοιχεία της φόρμας ειδικής παραγγελίας αποθηκεύονται προσωρινά στη μνήμη συνεδρίας
+                του περιηγητή σας, προκειμένου να μην χάνονται σε περίπτωση ανανέωσης ή κλεισίματος
+                της καρτέλας.
+              </p>
+              <p className="leading-relaxed text-muted-foreground text-xs sm:text-[13px] text-center">
+                Διαγράφονται αυτόματα μετά την αποστολή ή το κλείσιμο του browser.
+              </p>
+            </div>
+          }
+          primaryLabel="Αποδοχή προσωρινής αποθήκευσης"
+          primaryVariant="default"
+          primaryOnClick={() => updateConsent(true)}
+          secondaryLabel="Συνέχεια χωρίς αποθήκευση"
+          secondaryVariant="outline"
+          secondaryOnClick={declineSessionStorage}
+        />
+      )}
     </section>
   );
 }

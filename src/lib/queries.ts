@@ -58,6 +58,10 @@ export const privacyQuery = queryOptions({
   queryKey: ["content", "privacy"],
   queryFn: () => siteContent.getPrivacy(),
 });
+export const cookiesQuery = queryOptions({
+  queryKey: ["content", "cookies"],
+  queryFn: () => siteContent.getCookies(),
+});
 export const seminarTermsQuery = queryOptions({
   queryKey: ["content", "seminar-terms"],
   queryFn: () => siteContent.getSeminarTerms(),

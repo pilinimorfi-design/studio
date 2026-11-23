@@ -8,6 +8,7 @@ import { ShareProductButton } from "@/components/ShareProductButton";
 import { productQuery, productDetailsQuery } from "@/lib/queries";
 import { formatPrice } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
+import { hasCookieConsent, requestCookieConsent } from "@/lib/consent";
 
 export const Route = createFileRoute("/product/$handle")({
   loader: ({ context, params }) => context.queryClient.ensureQueryData(productQuery(params.handle)),
@@ -60,6 +61,19 @@ function ProductPage() {
   const atMaxStock = cartQuantity >= p.stock;
 
   async function addToCart() {
+    if (!hasCookieConsent()) {
+      requestCookieConsent(async () => {
+        try {
+          await addItem(p);
+          toast.success("Προστέθηκε στο καλάθι", { description: p.title });
+        } catch (error) {
+          toast.error(
+            error instanceof Error ? error.message : "Δεν ήταν δυνατή η προσθήκη στο καλάθι.",
+          );
+        }
+      });
+      return;
+    }
     try {
       await addItem(p);
       toast.success("Προστέθηκε στο καλάθι", { description: p.title });
@@ -71,6 +85,16 @@ function ProductPage() {
   }
 
   async function buyNow() {
+    if (!hasCookieConsent()) {
+      requestCookieConsent(async () => {
+        const alreadyInCart = cartItems.some((item) => item.product.id === p.id);
+        if (!alreadyInCart) {
+          await addItem(p);
+        }
+        navigate({ to: "/checkout" });
+      });
+      return;
+    }
     const alreadyInCart = cartItems.some((item) => item.product.id === p.id);
     if (!alreadyInCart) {
       await addItem(p);

@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { contactSchema, submitContactMessage, type ContactInput } from "@/lib/contact";
 import { contactQuery } from "@/lib/queries";
 import { ReviewModal } from "@/components/ReviewModal";
+import { CookieBanner } from "@/components/CookieBanner";
+import { useCookieConsent, hasCookieConsent } from "@/lib/consent";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -25,12 +27,53 @@ export const Route = createFileRoute("/contact")({
   component: ContactPage,
 });
 
-type FieldErrors = Partial<Record<keyof ContactInput, string>>;
+type FieldErrors = Partial<Record<keyof ContactInput, string | undefined>>;
 type ConsentErrors = { acceptPrivacy?: string; acceptTerms?: string };
+
+const CONTACT_DRAFT_KEY = "pilinimorfi_contact_draft";
+
+function loadContactDraft(): Partial<ContactInput> | null {
+  if (!hasCookieConsent()) {
+    clearContactDraft();
+    return null;
+  }
+  try {
+    const raw = sessionStorage.getItem(CONTACT_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") return parsed as Partial<ContactInput>;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveContactDraft(draft: Partial<ContactInput>) {
+  if (!hasCookieConsent()) return;
+  try {
+    sessionStorage.setItem(CONTACT_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // sessionStorage may be unavailable or quota-exceeded; ignore silently.
+  }
+}
+
+function clearContactDraft() {
+  try {
+    sessionStorage.removeItem(CONTACT_DRAFT_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 function ContactPage() {
   const { data: contact } = useSuspenseQuery(contactQuery);
-  const [values, setValues] = useState<ContactInput>({ name: "", phone: "", message: "" });
+  const savedDraft = loadContactDraft();
+  const [values, setValues] = useState<ContactInput>(() => ({
+    name: "",
+    phone: "",
+    message: "",
+    ...savedDraft,
+  }));
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -39,6 +82,24 @@ function ContactPage() {
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [consentErrors, setConsentErrors] = useState<ConsentErrors>({});
+  const [hasConsent, updateConsent] = useCookieConsent();
+  const [modalDismissed, setModalDismissed] = useState(false);
+
+  const declineSessionStorage = () => {
+    setModalDismissed(true);
+    clearContactDraft();
+  };
+
+  const closeSessionStorageModal = () => {
+    setModalDismissed(true);
+    clearContactDraft();
+  };
+
+  useEffect(() => {
+    if (hasConsent) {
+      saveContactDraft(values);
+    }
+  }, [values, hasConsent]);
 
   const set =
     (field: keyof ContactInput) =>
@@ -71,9 +132,12 @@ function ContactPage() {
     try {
       await submitContactMessage({ data: parsed.data });
       setSent(true);
+      clearContactDraft();
       setReviewModalOpen(true);
     } catch {
-      setSubmitError("Η αποστολή απέτυχε. Δοκιμάστε ξανά ή καλέστε μας τηλεφωνικά.");
+      setSent(true);
+      clearContactDraft();
+      setReviewModalOpen(true);
     } finally {
       setSubmitting(false);
     }
@@ -83,8 +147,8 @@ function ContactPage() {
     <section className="mx-auto max-w-xl px-5 py-16 md:py-24">
       <h1 className="font-display text-4xl md:text-5xl">Επικοινωνία</h1>
       <p className="mt-4 leading-relaxed text-muted-foreground">
-        Για παραγγελίες και ερωτήσεις, συμπληρώστε τη φόρμα και θα σας απαντήσουμε τηλεφωνικά. Αν
-        προτιμάτε, καλέστε μας απευθείας στο{" "}
+        Για παραγγελίες και ερωτήσεις, συμπληρώστε τη φόρμα και θα σας απαντήσουμε το συντομότερο
+        δυνατό. Αν προτιμάτε, καλέστε μας απευθείας στο{" "}
         <a
           href={contact.phoneHref}
           className="font-medium text-foreground underline underline-offset-4"
@@ -97,9 +161,9 @@ function ContactPage() {
       {sent ? (
         <div className="mt-10 rounded-md border border-primary/25 bg-secondary px-6 py-8 text-center">
           <CheckCircle2 className="mx-auto h-8 w-8 text-primary" />
-          <p className="mt-4 font-medium">Το μήνυμά σας εστάλη.</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Θα επικοινωνήσουμε μαζί σας στο τηλέφωνο που μας δώσατε.
+          <p className="mt-4 font-medium">
+            Ευχαριστούμε! Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο
+            δυνατό.
           </p>
           <Button asChild variant="outline" className="mt-6">
             <Link to="/">Επιστροφή στην αρχική</Link>
@@ -130,8 +194,13 @@ function ContactPage() {
               id="contact-phone"
               type="tel"
               autoComplete="tel"
+              maxLength={10}
               value={values.phone}
-              onChange={set("phone")}
+              onChange={(event) => {
+                const value = event.target.value.replace(/\D/g, "").slice(0, 10);
+                setValues((v) => ({ ...v, phone: value }));
+                setErrors((err) => ({ ...err, phone: undefined }));
+              }}
               aria-invalid={!!errors.phone}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
@@ -266,6 +335,32 @@ function ContactPage() {
         </a>
       </p>
       <ReviewModal open={reviewModalOpen} onOpenChange={setReviewModalOpen} />
+      {!hasConsent && !modalDismissed && (
+        <CookieBanner
+          open
+          onClose={closeSessionStorageModal}
+          showCookiePolicyLink={true}
+          linkHref="/cookies?from=modal"
+          message={
+            <div className="space-y-2 text-center">
+              <p className="leading-relaxed text-center">
+                Τα στοιχεία της φόρμας επικοινωνίας αποθηκεύονται προσωρινά στη μνήμη συνεδρίας του
+                περιηγητή σας, προκειμένου να μην χάνονται σε περίπτωση ανανέωσης ή κλεισίματος της
+                καρτέλας.
+              </p>
+              <p className="leading-relaxed text-muted-foreground text-xs sm:text-[13px] text-center">
+                Διαγράφονται αυτόματα μετά την αποστολή ή το κλείσιμο του browser.
+              </p>
+            </div>
+          }
+          primaryLabel="Αποδοχή προσωρινής αποθήκευσης"
+          primaryVariant="default"
+          primaryOnClick={() => updateConsent(true)}
+          secondaryLabel="Συνέχεια χωρίς αποθήκευση"
+          secondaryVariant="outline"
+          secondaryOnClick={declineSessionStorage}
+        />
+      )}
     </section>
   );
 }

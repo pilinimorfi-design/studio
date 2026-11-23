@@ -106,22 +106,58 @@ export function StarRatingPartialFill({ rating }: { rating: number }) {
   );
 }
 
+const USER_RATING_KEY = "pilinimorfi_user_rating";
+
 export function ReviewStarsWidget({
   averageRating,
   reviewCount,
   userRating,
   onRate,
   submitting,
+  showHint = true,
+  starsFirst = false,
+  starSize: starSizeProp = "small",
+  ratingDisplay = true,
 }: {
   averageRating: number | null;
   reviewCount: number;
   userRating: number | null;
   onRate: (rating: number) => void;
   submitting: boolean;
+  showHint?: boolean;
+  starsFirst?: boolean;
+  starSize?: "small" | "large";
+  ratingDisplay?: boolean;
 }) {
+  const starCls = starSizeProp === "large" ? "w-6 h-6" : "w-5 h-5";
+  const textCls =
+    starSizeProp === "large" ? "text-xs text-muted-foreground" : "text-sm font-medium";
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
+  const [storedRating, setStoredRating] = useState<number | null>(null);
   const starsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(USER_RATING_KEY);
+      if (saved && userRating === null) {
+        setStoredRating(Number(saved));
+      }
+    } catch {
+      // localStorage unavailable or unreadable; ignore
+    }
+  }, [userRating]);
+
+  useEffect(() => {
+    if (userRating !== null) {
+      setStoredRating(userRating);
+      try {
+        localStorage.setItem(USER_RATING_KEY, String(userRating));
+      } catch {
+        // localStorage unavailable or unwritable; ignore
+      }
+    }
+  }, [userRating]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -150,54 +186,113 @@ export function ReviewStarsWidget({
   const handleClick = (rating: number) => {
     setHoverRating(null);
     onRate(rating);
-    setConfirmation("Η αξιολόγησή σας καταχωρήθηκε");
+    setConfirmation("Η αξιολόγηση σας καταχωρήθηκε!");
   };
 
   const showPreview = hoverRating !== null;
   const displayRating = showPreview ? hoverRating! : (averageRating ?? 0);
-  const hint = userRating ? "Άλλαξε την ψήφο σου" : "Βαθμολογήστε μας";
+  const effectiveUserRating = userRating ?? storedRating;
+  const hint = effectiveUserRating ? "Άλλαξε την αξιολόγησή σου" : "Αξιολογήστε μας";
+
+  const ratingText =
+    averageRating != null
+      ? averageRating.toLocaleString("el-GR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }) + "/5"
+      : null;
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex items-center gap-2">
       {confirmation && <p className="text-xs font-medium text-primary">{confirmation}</p>}
-      <p className="text-sm text-muted-foreground">{hint}</p>
-      <div
-        ref={starsRef}
-        role="group"
-        aria-label="Αξιολόγηση από 1 έως 5 αστέρια"
-        className="flex gap-1 cursor-pointer"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      >
-        {[1, 2, 3, 4, 5].map((rating) => {
-          const fill = showPreview
-            ? rating <= (hoverRating ?? 0)
-              ? 100
-              : 0
-            : Math.max(0, Math.min(100, (displayRating - (rating - 1)) * 100));
-          return (
-            <span
-              key={rating}
-              className="relative inline-block w-8 h-8"
-              onClick={() => handleClick(rating)}
-              onMouseEnter={() => setHoverRating(rating)}
-              onMouseLeave={() => setHoverRating(null)}
+      {showHint && <p className={textCls}>{hint}</p>}
+      <div className="inline-flex items-center gap-2">
+        {starsFirst ? (
+          <>
+            <div
+              ref={starsRef}
+              role="group"
+              aria-label="Αξιολόγηση από 1 έως 5 αστέρια"
+              className="flex gap-1 cursor-pointer"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
             >
-              <Star className="w-8 h-8 text-amber-400/40" aria-hidden="true" />
-              <div
-                className="absolute top-0 left-0 h-full overflow-hidden"
-                style={{ width: `${fill}%` }}
-              >
-                <Star
-                  className="w-8 h-8 shrink-0 fill-amber-400 text-amber-400"
-                  aria-hidden="true"
-                />
-              </div>
-            </span>
-          );
-        })}
+              {[1, 2, 3, 4, 5].map((rating) => {
+                const fill = showPreview
+                  ? rating <= (hoverRating ?? 0)
+                    ? 100
+                    : 0
+                  : Math.max(0, Math.min(100, (displayRating - (rating - 1)) * 100));
+                return (
+                  <span
+                    key={rating}
+                    className={`relative inline-block ${starCls} transition-transform duration-200 hover:scale-125`}
+                    onClick={() => handleClick(rating)}
+                    onMouseEnter={() => setHoverRating(rating)}
+                    onMouseLeave={() => setHoverRating(null)}
+                  >
+                    <Star className={`${starCls} text-amber-400/40`} aria-hidden="true" />
+                    <div
+                      className="absolute top-0 left-0 h-full overflow-hidden"
+                      style={{ width: `${fill}%` }}
+                    >
+                      <Star
+                        className={`${starCls} shrink-0 fill-amber-400 text-amber-400`}
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </span>
+                );
+              })}
+            </div>
+            {ratingText && ratingDisplay && (
+              <span className={textCls + " text-muted-foreground"}>{ratingText}</span>
+            )}
+            {ratingDisplay && <span className={textCls}>({reviewCount})</span>}
+          </>
+        ) : (
+          <>
+            {ratingText && <span className={textCls + " text-muted-foreground"}>{ratingText}</span>}
+            <div
+              ref={starsRef}
+              role="group"
+              aria-label="Αξιολόγηση από 1 έως 5 αστέρια"
+              className="flex gap-1 cursor-pointer"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
+              {[1, 2, 3, 4, 5].map((rating) => {
+                const fill = showPreview
+                  ? rating <= (hoverRating ?? 0)
+                    ? 100
+                    : 0
+                  : Math.max(0, Math.min(100, (displayRating - (rating - 1)) * 100));
+                return (
+                  <span
+                    key={rating}
+                    className={`relative inline-block ${starCls} transition-transform duration-200 hover:scale-125`}
+                    onClick={() => handleClick(rating)}
+                    onMouseEnter={() => setHoverRating(rating)}
+                    onMouseLeave={() => setHoverRating(null)}
+                  >
+                    <Star className={`${starCls} text-amber-400/40`} aria-hidden="true" />
+                    <div
+                      className="absolute top-0 left-0 h-full overflow-hidden"
+                      style={{ width: `${fill}%` }}
+                    >
+                      <Star
+                        className={`${starCls} shrink-0 fill-amber-400 text-amber-400`}
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </span>
+                );
+              })}
+            </div>
+            <span className={textCls}>({reviewCount})</span>
+          </>
+        )}
       </div>
-      <span className="text-muted-foreground text-sm">({reviewCount})</span>
     </div>
   );
 }

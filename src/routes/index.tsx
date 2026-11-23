@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useDeviceId } from "@/hooks/useDeviceId";
+import { CookieBanner } from "@/components/CookieBanner";
+import { useCookieConsent } from "@/lib/consent";
 
 const ALL = "Όλα";
 const PAGE_SIZE = 8;
@@ -53,6 +55,8 @@ function Index() {
   const googleReviewUrl = getGoogleReviewUrl();
   const deviceId = useDeviceId();
   const queryClient = useQueryClient();
+  const [hasConsent, updateConsent] = useCookieConsent();
+  const [homeModalDismissed, setHomeModalDismissed] = useState(false);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [ipHash, setIpHash] = useState<string | null>(null);
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -157,32 +161,45 @@ function Index() {
       </section>
 
       <section aria-labelledby="reviews-heading" className="border-b border-border bg-secondary">
-        <div className="mx-auto max-w-6xl px-5 py-10 text-left">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between w-full">
+        <div className="mx-auto max-w-6xl px-5 py-4 md:py-5 text-left">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between w-full">
             <div className="flex flex-col items-start gap-2">
-              <p className="text-sm font-medium uppercase tracking-[0.16em] text-primary">
+              <p className="text-xs font-medium uppercase tracking-wider text-primary pl-[2px]">
                 Η ΓΝΩΜΗ ΣΑΣ ΜΕΤΡΑΕΙ
               </p>
               <h2 id="reviews-heading" className="mt-0 font-display text-2xl md:text-3xl">
                 Η εμπιστοσύνη σας μας εμπνέει
               </h2>
             </div>
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-start gap-1">
               {deviceReviews.isPending ? (
-                <p className="text-sm text-muted-foreground">Φόρτωση αξιολογήσεων...</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-primary transition-opacity opacity-75 pl-[2px]">
+                  ΑΞΙΟΛΟΓΗΣΤΕ ΜΑΣ
+                </p>
               ) : deviceReviews.isError ? (
-                <p role="alert" className="text-sm text-destructive">
+                <p role="alert" className="text-sm text-destructive pl-[2px]">
                   Δεν ήταν δυνατή η φόρτωση των αξιολογήσεων.
                 </p>
               ) : (
-                <ReviewStarsWidget
-                  averageRating={deviceReviews.data?.averageRating ?? null}
-                  reviewCount={deviceReviews.data?.reviewCount ?? 0}
-                  userRating={userRating}
-                  onRate={handleRate}
-                  submitting={submittingReview}
-                />
+                <p className="text-xs font-medium uppercase tracking-wider text-primary transition-opacity opacity-75 pl-[2px]">
+                  ΑΞΙΟΛΟΓΗΣΤΕ ΜΑΣ
+                </p>
               )}
+              <div className="inline-flex items-center gap-2 mt-2.5">
+                {!deviceReviews.isPending && !deviceReviews.isError && (
+                  <ReviewStarsWidget
+                    averageRating={deviceReviews.data?.averageRating ?? null}
+                    reviewCount={deviceReviews.data?.reviewCount ?? 0}
+                    userRating={userRating}
+                    onRate={handleRate}
+                    submitting={submittingReview}
+                    showHint={false}
+                    starsFirst
+                    starSize="large"
+                    ratingDisplay={true}
+                  />
+                )}
+              </div>
             </div>
           </div>
           {googleReviewUrl && (
@@ -368,6 +385,27 @@ function Index() {
           </Button>
         </div>
       </section>
+      {!hasConsent && !homeModalDismissed && (
+        <CookieBanner
+          open
+          onClose={() => setHomeModalDismissed(true)}
+          showCookiePolicyLink={true}
+          linkHref="/cookies?from=modal"
+          message={
+            <p className="leading-relaxed">
+              Καλώς ήρθατε στο εργαστήριο κεραμικής «Πήλινη Μορφή». Χρησιμοποιούμε μόνο τα απολύτως
+              απαραίτητα τεχνικά στοιχεία για τη βασική λειτουργία του ιστότοπου και του καλαθιού
+              αγορών, χωρίς cookies παρακολούθησης ή διαφήμισης.
+            </p>
+          }
+          primaryLabel="Αποδοχή"
+          primaryVariant="default"
+          primaryOnClick={() => updateConsent(true)}
+          secondaryLabel="Συνέχεια χωρίς αποθήκευση"
+          secondaryVariant="outline"
+          secondaryOnClick={() => setHomeModalDismissed(true)}
+        />
+      )}
     </>
   );
 }

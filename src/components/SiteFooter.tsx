@@ -49,10 +49,10 @@ export function SiteFooter() {
               Πολιτική Απορρήτου
             </Link>
             <Link
-              to="/seminar-terms"
+              to="/cookies"
               className="relative transition-all duration-300 group-hover:opacity-60 hover:!opacity-100 hover:text-[#E5A98C] after:content-[''] after:block after:h-[1.5px] after:w-0 after:bg-[#E5A98C] after:mx-auto after:transition-all after:duration-300 hover:after:w-full"
             >
-              Όροι Σεμιναρίων
+              Πολιτική Cookies
             </Link>
           </nav>
         </div>

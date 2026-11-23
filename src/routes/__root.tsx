@@ -17,6 +17,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Toaster } from "@/components/ui/sonner";
 import { contactQuery } from "@/lib/queries";
+import { CookieBanner } from "@/components/CookieBanner";
+import { useConsentModal } from "@/lib/consent";
 
 function NotFoundComponent() {
   return (
@@ -120,6 +122,33 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function ConsentModalRoot() {
+  const { isOpen, closeModal, acceptModal } = useConsentModal();
+
+  if (!isOpen) return null;
+
+  return (
+    <CookieBanner
+      open={isOpen}
+      onClose={closeModal}
+      showCookiePolicyLink={true}
+      linkHref="/cookies?from=modal"
+      message={
+        <p className="leading-relaxed">
+          Για να προσθέσετε προϊόντα στο καλάθι και να προχωρήσετε στις αγορές σας, απαιτείται η
+          αποδοχή της Πολιτικής Cookies για τη λειτουργία του καλαθιού αγορών.
+        </p>
+      }
+      primaryLabel="Αποδοχή και συνέχεια"
+      primaryVariant="default"
+      primaryOnClick={acceptModal}
+      secondaryLabel="Συνέχεια χωρίς αποθήκευση"
+      secondaryVariant="outline"
+      secondaryOnClick={closeModal}
+    />
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useCartSync();
@@ -132,6 +161,7 @@ function RootComponent() {
       </main>
       <SiteFooter />
       <Toaster position="top-center" />
+      <ConsentModalRoot />
     </QueryClientProvider>
   );
 }

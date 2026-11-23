@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as MockOrderJourneyRouteImport } from './routes/mock-order-journey'
 import { Route as MockPaymentRouteImport } from './routes/mock-payment'
 import { Route as OrderConfirmationRouteImport } from './routes/order-confirmation'
@@ -42,6 +43,11 @@ const CheckoutRoute = CheckoutRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MockOrderJourneyRoute = MockOrderJourneyRouteImport.update({
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/cookies': typeof CookiesRoute
   '/mock-order-journey': typeof MockOrderJourneyRoute
   '/mock-payment': typeof MockPaymentRoute
   '/order-confirmation': typeof OrderConfirmationRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/cookies': typeof CookiesRoute
   '/mock-order-journey': typeof MockOrderJourneyRoute
   '/mock-payment': typeof MockPaymentRoute
   '/order-confirmation': typeof OrderConfirmationRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/cookies': typeof CookiesRoute
   '/mock-order-journey': typeof MockOrderJourneyRoute
   '/mock-payment': typeof MockPaymentRoute
   '/order-confirmation': typeof OrderConfirmationRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/contact'
+    | '/cookies'
     | '/mock-order-journey'
     | '/mock-payment'
     | '/order-confirmation'
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/contact'
+    | '/cookies'
     | '/mock-order-journey'
     | '/mock-payment'
     | '/order-confirmation'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/contact'
+    | '/cookies'
     | '/mock-order-journey'
     | '/mock-payment'
     | '/order-confirmation'
@@ -200,6 +212,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
+  CookiesRoute: typeof CookiesRoute
   MockOrderJourneyRoute: typeof MockOrderJourneyRoute
   MockPaymentRoute: typeof MockPaymentRoute
   OrderConfirmationRoute: typeof OrderConfirmationRoute
@@ -240,6 +253,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mock-order-journey': {
@@ -320,6 +340,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
+  CookiesRoute: CookiesRoute,
   MockOrderJourneyRoute: MockOrderJourneyRoute,
   MockPaymentRoute: MockPaymentRoute,
   OrderConfirmationRoute: OrderConfirmationRoute,
