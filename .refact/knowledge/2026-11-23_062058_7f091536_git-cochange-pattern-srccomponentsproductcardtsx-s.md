@@ -1,42 +1,22 @@
 ---
-id: bd22ed5e-6be9-40d6-a0a3-b2ae8c9c56dd
-title: 'Git co-change pattern: src/components/ProductCard.tsx + src/routes/index.tsx'
-tags:
-- cochange
-- git
-- pattern
+id: "bd22ed5e-6be9-40d6-a0a3-b2ae8c9c56dd"
+title: "Git co-change pattern: src/components/ProductCard.tsx + src/routes/index.tsx"
+kind: pattern
 created: 2026-11-23
 updated: 2026-11-23
-filenames:
-- src/components/ProductCard.tsx
-- src/routes/index.tsx
-links: []
-kind: pattern
-status: proposed
-superseded_by: null
-deprecated_at: null
 review_after: 2026-11-23
-source_chat_id: null
-created_at: 2026-11-23T04:20:58.093682800+00:00
-summary: null
-description: null
-entities: []
-related_files: []
-related_entities: []
-content_hash: d2764516e70186a9debebe75fc616fe3746a9037b0cb9c00b25ff15ba3a5ace5
-source_tool: buddy_memory_lifecycle:git
-source_confidence: 0.7799999713897705
-source_trajectory_id: null
-source_message_range: null
-source_commit: 34d1f3aac8ef
-topic: null
-last_used_at: null
-use_count: 0
-last_injected_at: null
-dismissed_count: 0
-source_content_hash: d2764516e70186a9debebe75fc616fe3746a9037b0cb9c00b25ff15ba3a5ace5
+status: proposed
+tags: ["cochange", "git", "pattern"]
+filenames: ["src/components/ProductCard.tsx", "src/routes/index.tsx"]
+created_at: "2026-11-23T04:20:58.093682800+00:00"
+content_hash: "d2764516e70186a9debebe75fc616fe3746a9037b0cb9c00b25ff15ba3a5ace5"
+source_tool: "buddy_memory_lifecycle:git"
+source_confidence: 0.780
+source_commit: "34d1f3aac8ef"
+source_content_hash: "d2764516e70186a9debebe75fc616fe3746a9037b0cb9c00b25ff15ba3a5ace5"
 review_needed: true
-occurrences: 0
+occurrences: 2
+last_observed: "2026-11-23T06:28:01.782856300+00:00"
 ---
 
 Git co-change pattern: src/components/ProductCard.tsx + src/routes/index.tsx
