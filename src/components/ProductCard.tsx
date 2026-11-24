@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+
 import { ProductAttributes } from "@/components/ProductAttributes";
 import { useCartStore } from "@/stores/cartStore";
 
@@ -69,8 +70,9 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
     }
   }
 
-  return (
-    <article className="group relative flex h-full flex-col border-[#C27D5E]/50 hover:border-[#C27D5E] border-[1px] rounded-xl bg-transparent p-4 shadow-soft">
+  return (<>
+
+    <article className="product-card group relative flex h-full flex-col border-[#C27D5E]/50 hover:border-[#C27D5E] border-[1px] rounded-xl bg-transparent p-4 shadow-soft">
       <Link
         to="/product/$handle"
         params={{ handle: product.handle }}
@@ -116,7 +118,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         <div className="mt-auto flex flex-col gap-1 pt-4">
           <Button
             variant="default"
-            className="relative z-10 border border-input bg-background text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed text-sm"
+            className="relative z-10 border border-input bg-background text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed text-sm add-to-cart-btn"
             onClick={() => void addToCart()}
             disabled={isLoading || product.stock <= 0 || atMaxStock}
           >
@@ -124,7 +126,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           </Button>
           <Button
             variant="default"
-            className="relative z-10 h-8 border border-input bg-background text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed text-sm"
+            className="relative z-10 h-8 border border-input bg-background text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed text-sm buy-now-btn"
             onClick={() => void buyNow()}
             disabled={isLoading || product.stock <= 0}
           >
@@ -133,5 +135,6 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         </div>
       </div>
     </article>
+  </>
   );
 }

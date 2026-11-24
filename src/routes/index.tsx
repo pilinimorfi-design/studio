@@ -112,10 +112,26 @@ function Index() {
   const productTypes = (products.data ?? [])
     .map((product) => product.productType)
     .filter((type): type is string => Boolean(type));
-  const categories = [...new Set<string>([...CATEGORIES, ...productTypes])];
-  const visible = (products.data ?? []).filter(
-    (p) => category === ALL || p.productType === category,
-  );
+  // Helper to normalize synonymous category names
+const normalizeCategory = (name: string): string => {
+  const trimmed = name.trim().toLocaleLowerCase("el");
+  if (trimmed === "βάζο") return "Βάζα";
+  // Preserve original capitalization for other names
+  return name;
+};
+
+// Build the list of categories, merging synonyms and removing duplicates
+const rawCategories = [...new Set<string>([...CATEGORIES, ...productTypes])];
+const categories = [...new Set<string>(rawCategories.map(normalizeCategory))];
+
+// Filter visible products using normalized categories
+const visible = (products.data ?? []).filter(
+  (p) => {
+    const prodCat = normalizeCategory(p.productType ?? "");
+    return category === ALL || prodCat === category;
+  },
+);
+
   const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const paged = visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -233,7 +249,7 @@ function Index() {
                 const count =
                   c === ALL
                     ? (products.data?.length ?? 0)
-                    : (products.data ?? []).filter((p) => p.productType === c).length;
+                    : (products.data ?? []).filter((p) => normalizeCategory(p.productType ?? "") === c).length;
                 return (
                   <SelectItem
                     key={c}

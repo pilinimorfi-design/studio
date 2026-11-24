@@ -154,7 +154,17 @@ export const listManagedProductCategories = createServerFn({ method: "POST" })
       .select("id, name")
       .order("name");
     if (error) throw new Error(`Η φόρτωση των κατηγοριών απέτυχε: ${error.message}`);
-    return rows;
+    // Normalize synonymous category names: treat "Βάζο" as "Βάζα"
+    const normalized = rows?.map((row) => ({
+      ...row,
+      name: row.name.trim().toLocaleLowerCase("el") === "βάζο" ? "Βάζα" : row.name,
+    }));
+    // Remove potential duplicate entries after normalization
+    const unique = normalized?.filter(
+      (cat, index, self) =>
+        index === self.findIndex((c) => c.id === cat.id && c.name === cat.name),
+    );
+    return unique;
   });
 
 const createCategorySchema = adminPasswordSchema.extend({
