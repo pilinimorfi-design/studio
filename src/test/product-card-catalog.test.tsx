@@ -13,11 +13,12 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 vi.mock("@/stores/cartStore", () => ({
   useCartStore: (
-    selector: (state: { addItem: () => Promise<void>; isLoading: boolean }) => unknown,
-  ) => selector({ addItem: productCardMocks.addItem, isLoading: false }),
+    selector: (state: { addItem: () => Promise<void>; isLoading: boolean; items: unknown[] }) => unknown,
+  ) => selector({ addItem: productCardMocks.addItem, isLoading: false, items: [] }),
 }));
-vi.mock("sonner", () => ({
-  toast: { success: vi.fn(), error: vi.fn() },
+vi.mock("@/lib/consent", () => ({
+  hasCookieConsent: () => true,
+  requestCookieConsent: (cb: () => void) => cb(),
 }));
 
 import { ProductCard } from "@/components/ProductCard";
@@ -50,7 +51,7 @@ describe("ProductCard — δημόσιος κατάλογος Supabase", () => {
     render(<ProductCard product={product} />);
 
     expect(screen.getByText("Πήλινο Μπολ")).toBeInTheDocument();
-    expect(screen.getByText("Χειροποίητο κεραμικό μπολ")).toBeInTheDocument();
+    expect(screen.queryByText("Χειροποίητο κεραμικό μπολ")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Προσθήκη στο καλάθι" })).toHaveClass(
       "border-input",
       "bg-background",

@@ -25,7 +25,7 @@ import { CookieBanner } from "@/components/CookieBanner";
 import { useCookieConsent } from "@/lib/consent";
 
 const ALL = "Όλα";
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 6;
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -237,8 +237,8 @@ const visible = (products.data ?? []).filter(
           Προσθέστε τα αγαπημένα σας στο καλάθι και συνεχίστε στο ταμείο.
         </p>
         <div className="mb-10 flex items-center gap-3">
-          <label htmlFor="category" className="text-sm text-muted-foreground">
-            Κατηγορία
+          <label htmlFor="category" className="text-base font-bold text-primary">
+            Κατηγορία:
           </label>
           <Select value={category} onValueChange={selectCategory}>
             <SelectTrigger id="category" className="w-56">
@@ -264,8 +264,8 @@ const visible = (products.data ?? []).filter(
           </Select>
         </div>
         {products.isLoading ? (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {[0, 1, 2, 3].map((i) => (
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="aspect-square animate-pulse rounded-md bg-muted" />
             ))}
           </div>
@@ -278,7 +278,7 @@ const visible = (products.data ?? []).filter(
           </div>
         ) : visible.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
               {paged.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
@@ -294,6 +294,7 @@ const visible = (products.data ?? []).filter(
                   onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}
                   aria-label="Προηγούμενη σελίδα"
+                  className="hover:border-primary hover:bg-primary/10 hover:text-primary transition-colors"
                 >
                   <ChevronLeft />
                 </Button>
@@ -305,6 +306,11 @@ const visible = (products.data ?? []).filter(
                     onClick={() => goToPage(n)}
                     aria-label={`Σελίδα ${n}`}
                     aria-current={n === currentPage ? "page" : undefined}
+                    className={
+                      n === currentPage
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                        : "hover:border-primary hover:bg-primary/10 hover:text-primary transition-colors"
+                    }
                   >
                     {n}
                   </Button>
@@ -315,6 +321,7 @@ const visible = (products.data ?? []).filter(
                   onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === pageCount}
                   aria-label="Επόμενη σελίδα"
+                  className="hover:border-primary hover:bg-primary/10 hover:text-primary transition-colors"
                 >
                   <ChevronRight />
                 </Button>

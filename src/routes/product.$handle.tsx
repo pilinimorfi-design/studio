@@ -163,7 +163,8 @@ function ProductPage() {
             p.lengthCm != null ||
             p.widthCm != null ||
             p.glazed != null ||
-            p.homeUse != null) && (
+            p.homeUse != null ||
+            p.fired != null) && (
             <section className="mt-10 border-t pt-6">
               <h2 className="font-display text-xl">Χαρακτηριστικά</h2>
               <div className="mt-3">

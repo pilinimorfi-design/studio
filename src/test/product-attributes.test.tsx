@@ -28,10 +28,11 @@ const product: CatalogProduct = {
 describe("ProductAttributes", () => {
   afterEach(cleanup);
 
-  it("does not render a characteristics list when no product attributes are set", () => {
+  it("renders with default fireproof indicator even when no optional attributes are set", () => {
     const { container } = render(<ProductAttributes product={product} />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByText("Πυρίμαχο:")).toBeInTheDocument();
+    expect(screen.getByText("Όχι")).toBeInTheDocument();
   });
 
   it("shows only populated values and preserves explicit false values", () => {

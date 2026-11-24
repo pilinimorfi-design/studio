@@ -14,11 +14,11 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   const navigate = useNavigate();
   const addItem = useCartStore((state) => state.addItem);
   const isLoading = useCartStore((state) => state.isLoading);
-  const cartItems = useCartStore((state) => state.items);
+  const cartItems = useCartStore((state) => state.items) ?? [];
 
   const cartItem = cartItems.find((item) => item.product.id === product.id);
   const cartQuantity = cartItem?.quantity ?? 0;
-  const atMaxStock = cartQuantity >= product.stock;
+  const atMaxStock = product.stock > 0 && cartQuantity >= product.stock;
 
   async function addToCart() {
     if (!hasCookieConsent()) {
@@ -79,7 +79,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         tabIndex={-1}
         aria-hidden="true"
         onClick={saveScrollAndNavigate}
-        className="block overflow-hidden rounded-md bg-muted shadow-soft"
+        className="relative block aspect-square w-full overflow-hidden rounded-lg bg-muted shadow-soft"
       >
         {image ? (
           <img
@@ -88,10 +88,10 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             loading="lazy"
             width={1000}
             height={1000}
-            className="aspect-square w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
           />
         ) : (
-          <div className="aspect-square w-full" />
+          <div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground/40" />
         )}
       </Link>
       <div className="mt-4 flex flex-1 flex-col">
@@ -107,9 +107,6 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           <span className="shrink-0 font-semibold">
             {formatPrice(product.price.amount, product.price.currencyCode)}
           </span>
-        </div>
-        <div className="mt-1 min-h-10 line-clamp-2 text-sm text-muted-foreground">
-          {product.description}
         </div>
         <div className="mt-2">
           <ShareProductButton product={product} className="relative z-10" />
