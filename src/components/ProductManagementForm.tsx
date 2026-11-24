@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { productsQuery } from "@/lib/queries";
+import { supabase } from "@/integrations/supabase/client";
 import {
   createManagedProductCategory,
   createManagedProduct,
@@ -42,8 +43,47 @@ const emptyForm = () => ({
   care: DEFAULT_CARE_INSTRUCTIONS,
   glazed: false,
   homeUse: false,
+  fired: false,
   isPublished: true,
 });
+
+const greekTransliteration: Record<string, string> = {
+  α: "a",
+  β: "v",
+  γ: "g",
+  δ: "d",
+  ε: "e",
+  ζ: "z",
+  η: "i",
+  θ: "th",
+  ι: "i",
+  κ: "k",
+  λ: "l",
+  μ: "m",
+  ν: "n",
+  ξ: "x",
+  ο: "o",
+  π: "p",
+  ρ: "r",
+  σ: "s",
+  ς: "s",
+  τ: "t",
+  υ: "y",
+  φ: "f",
+  χ: "ch",
+  ψ: "ps",
+  ω: "o",
+};
+
+function categoryToSlug(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[α-ως]/g, (char) => greekTransliteration[char] ?? char)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "general";
+}
 
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: string }) {
   return (
@@ -67,6 +107,9 @@ export function ProductManagementForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const products = useQuery({
     queryKey: ["admin-products"],
     queryFn: () => listManagedProducts({ data: { adminPassword } }),
@@ -169,6 +212,7 @@ export function ProductManagementForm() {
       care: product.care ?? DEFAULT_CARE_INSTRUCTIONS,
       glazed: product.glazed ?? false,
       homeUse: product.homeUse ?? false,
+      fired: product.fired ?? false,
       isPublished: product.isPublished,
     });
     setError("");
@@ -267,6 +311,136 @@ export function ProductManagementForm() {
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+              {/* 1. Κατηγορία */}
+              <div>
+                <FieldLabel htmlFor="product-category">Κατηγορία</FieldLabel>
+                <Select
+                  value={form.categoryId}
+                  onValueChange={(categoryId) => setForm({ ...form, categoryId })}
+                  required
+                >
+                  <SelectTrigger id="product-category" aria-label="Κατηγορία">
+                    <SelectValue placeholder="Επιλέξτε κατηγορία" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.data.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="mt-3 flex gap-2">
+                  <Input
+                    aria-label="Νέα κατηγορία"
+                    placeholder="Προσθήκη νέας κατηγορίας"
+                    value={newCategoryName}
+                    onChange={(event) => setNewCategoryName(event.target.value)}
+                    maxLength={100}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isAddingCategory || !newCategoryName.trim()}
+                    onClick={() => void addCategory()}
+                  >
+                    {isAddingCategory ? "Προσθήκη..." : "Προσθήκη"}
+                  </Button>
+                </div>
+                {categoryError && (
+                  <p role="alert" className="mt-2 text-sm text-destructive">
+                    {categoryError}
+                  </p>
+                )}
+                {categorySuccess && (
+                  <p role="status" className="mt-2 text-sm text-muted-foreground">
+                    {categorySuccess}
+                  </p>
+                )}
+              </div>
+
+              {/* 2. Φωτογραφία */}
+              <div>
+                <FieldLabel htmlFor="product-image">Φωτογραφία (προαιρετικό)</FieldLabel>
+                <div className="mt-1 flex flex-col gap-2">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border p-3 text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                    <Upload className="size-4 shrink-0" />
+                    {isUploading ? "Μεταφόρτωση..." : "Επιλέξτε αρχείο εικόνας"}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      disabled={isUploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploadError("");
+                        setIsUploading(true);
+                        try {
+                          const selectedCat = categories.data?.find((c) => c.id === form.categoryId);
+                          const categorySlug = selectedCat ? categoryToSlug(selectedCat.name) : "general";
+                          const ext = file.name.split(".").pop() ?? "jpg";
+                          const path = `${categorySlug}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+                          // Upload to 'images' bucket (with fallback to 'product-images' if needed)
+                          let bucketName = "images";
+                          let { error: uploadErr } = await supabase.storage
+                            .from(bucketName)
+                            .upload(path, file, { upsert: false });
+
+                          if (uploadErr && (uploadErr.message?.includes("Bucket not found") || (uploadErr as { statusCode?: string }).statusCode === "404")) {
+                            bucketName = "product-images";
+                            const fallbackResult = await supabase.storage
+                              .from(bucketName)
+                              .upload(path, file, { upsert: false });
+                            uploadErr = fallbackResult.error;
+                          }
+
+                          if (uploadErr) throw uploadErr;
+
+                          const { data: urlData } = supabase.storage
+                            .from(bucketName)
+                            .getPublicUrl(path);
+
+                          setForm((f) => ({ ...f, imageUrl: urlData.publicUrl }));
+                        } catch (err) {
+                          setUploadError(
+                            err instanceof Error ? err.message : "Η μεταφόρτωση απέτυχε.",
+                          );
+                        } finally {
+                          setIsUploading(false);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+                  {uploadError && (
+                    <p role="alert" className="text-sm text-destructive">
+                      {uploadError}
+                    </p>
+                  )}
+                  <Input
+                    id="product-image"
+                    type="url"
+                    placeholder="https://... (ή χρησιμοποιήστε το upload παραπάνω)"
+                    value={form.imageUrl}
+                    onChange={(event) => setForm({ ...form, imageUrl: event.target.value })}
+                  />
+                  {form.imageUrl && (
+                    <img
+                      src={form.imageUrl}
+                      alt="Προεπισκόπηση"
+                      className="mt-1 h-28 w-28 rounded-md object-cover border border-border"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* 3. Τίτλος */}
               <div>
                 <FieldLabel htmlFor="product-title">Τίτλος</FieldLabel>
                 <Input
@@ -278,6 +452,8 @@ export function ProductManagementForm() {
                   maxLength={150}
                 />
               </div>
+
+              {/* 4. Περιγραφή */}
               <div>
                 <FieldLabel htmlFor="product-description">Περιγραφή</FieldLabel>
                 <Textarea
@@ -289,6 +465,8 @@ export function ProductManagementForm() {
                   rows={5}
                 />
               </div>
+
+              {/* 5. Τιμή & Απόθεμα */}
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
                   <FieldLabel htmlFor="product-price">Τιμή (€)</FieldLabel>
@@ -315,63 +493,9 @@ export function ProductManagementForm() {
                     required
                   />
                 </div>
-                <div>
-                  <FieldLabel htmlFor="product-category">Κατηγορία</FieldLabel>
-                  <Select
-                    value={form.categoryId}
-                    onValueChange={(categoryId) => setForm({ ...form, categoryId })}
-                    required
-                  >
-                    <SelectTrigger id="product-category" aria-label="Κατηγορία">
-                      <SelectValue placeholder="Επιλέξτε κατηγορία" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.data.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="mt-3 flex gap-2">
-                    <Input
-                      aria-label="Νέα κατηγορία"
-                      placeholder="Προσθήκη νέας κατηγορίας"
-                      value={newCategoryName}
-                      onChange={(event) => setNewCategoryName(event.target.value)}
-                      maxLength={100}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={isAddingCategory || !newCategoryName.trim()}
-                      onClick={() => void addCategory()}
-                    >
-                      {isAddingCategory ? "Προσθήκη..." : "Προσθήκη"}
-                    </Button>
-                  </div>
-                  {categoryError && (
-                    <p role="alert" className="mt-2 text-sm text-destructive">
-                      {categoryError}
-                    </p>
-                  )}
-                  {categorySuccess && (
-                    <p role="status" className="mt-2 text-sm text-muted-foreground">
-                      {categorySuccess}
-                    </p>
-                  )}
-                </div>
               </div>
-              <div>
-                <FieldLabel htmlFor="product-image">URL εικόνας (προαιρετικό)</FieldLabel>
-                <Input
-                  id="product-image"
-                  type="url"
-                  placeholder="https://..."
-                  value={form.imageUrl}
-                  onChange={(event) => setForm({ ...form, imageUrl: event.target.value })}
-                />
-              </div>
+
+              {/* 6. Διαστάσεις */}
               <fieldset>
                 <legend className="mb-1.5 block text-sm font-medium">Διαστάσεις (cm)</legend>
                 <p className="mb-3 text-xs text-muted-foreground">
@@ -421,6 +545,8 @@ export function ProductManagementForm() {
                   </div>
                 </div>
               </fieldset>
+
+              {/* 7. Βάρος */}
               <div>
                 <FieldLabel htmlFor="product-weight">Βάρος (g)</FieldLabel>
                 <Input
@@ -433,17 +559,8 @@ export function ProductManagementForm() {
                   onChange={(event) => setForm({ ...form, weightGrams: event.target.value })}
                 />
               </div>
-              <div>
-                <FieldLabel htmlFor="product-care">Οδηγίες φροντίδας</FieldLabel>
-                <Textarea
-                  id="product-care"
-                  value={form.care}
-                  placeholder={DEFAULT_CARE_INSTRUCTIONS}
-                  onChange={(event) => setForm({ ...form, care: event.target.value })}
-                  maxLength={2000}
-                  rows={4}
-                />
-              </div>
+
+              {/* 8. Χαρακτηριστικά κεραμικού */}
               <fieldset className="space-y-3">
                 <legend className="text-sm font-medium">Χαρακτηριστικά κεραμικού</legend>
                 <label className="flex items-center gap-2 text-sm">
@@ -466,7 +583,19 @@ export function ProductManagementForm() {
                   />
                   Κατάλληλο για οικιακή χρήση
                 </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    id="product-fired"
+                    type="checkbox"
+                    checked={form.fired}
+                    onChange={(event) => setForm({ ...form, fired: event.target.checked })}
+                    className="size-4 accent-primary"
+                  />
+                  Πυρίμαχο
+                </label>
               </fieldset>
+
+              {/* 9. SKU */}
               <div>
                 <FieldLabel htmlFor="product-sku">Μοναδικός κωδικός προϊόντος (SKU)</FieldLabel>
                 <Input id="product-sku" value={sku} readOnly className="font-mono" />
@@ -474,6 +603,8 @@ export function ProductManagementForm() {
                   Δημιουργείται αυτόματα και είναι μοναδικός για κάθε προϊόν.
                 </p>
               </div>
+
+              {/* 10. Δημοσίευση */}
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -483,6 +614,19 @@ export function ProductManagementForm() {
                 />
                 Δημοσίευση στον δημόσιο κατάλογο
               </label>
+
+              {/* 11. Οδηγίες φροντίδας */}
+              <div>
+                <FieldLabel htmlFor="product-care">Οδηγίες φροντίδας</FieldLabel>
+                <Textarea
+                  id="product-care"
+                  value={form.care}
+                  placeholder={DEFAULT_CARE_INSTRUCTIONS}
+                  onChange={(event) => setForm({ ...form, care: event.target.value })}
+                  maxLength={2000}
+                  rows={4}
+                />
+              </div>
 
               {error && (
                 <p

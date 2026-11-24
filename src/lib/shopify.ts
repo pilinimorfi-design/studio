@@ -57,6 +57,7 @@ export interface CatalogProduct {
   care: string | null;
   glazed: boolean | null;
   homeUse: boolean | null;
+  fired: boolean | null;
 }
 
 export interface ManagedProduct extends CatalogProduct {
@@ -118,6 +119,7 @@ function mapCatalogProduct(row: ProductRow): ManagedProduct {
     care: row.care,
     glazed: row.glazed,
     homeUse: row.home_use,
+    fired: row.fired,
     isPublished: row.is_published,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -125,7 +127,7 @@ function mapCatalogProduct(row: ProductRow): ManagedProduct {
 }
 
 const PRODUCT_SELECT =
-  "id, sku, stock, category_id, title, description, handle, product_type, price, image_url, dimensions, weight_grams, height_cm, length_cm, width_cm, care, glazed, home_use, is_published, created_at, updated_at";
+  "id, sku, stock, category_id, title, description, handle, product_type, price, image_url, dimensions, weight_grams, height_cm, length_cm, width_cm, care, glazed, fired, home_use, is_published, created_at, updated_at";
 
 async function verifyProductAdminPassword(password: string) {
   const expectedPassword = process.env["PRODUCT_ADMIN_PASSWORD"];
@@ -259,6 +261,7 @@ const productInputSchema = z.object({
   care: z.string().trim().max(2000),
   glazed: z.boolean(),
   homeUse: z.boolean(),
+  fired: z.boolean(),
   isPublished: z.boolean(),
 });
 
@@ -338,6 +341,7 @@ async function productValues(input: ManagedProductInput) {
     care: input.care || DEFAULT_CARE_INSTRUCTIONS,
     glazed: input.glazed,
     home_use: input.homeUse,
+    fired: input.fired,
     is_published: input.isPublished,
     stock: Number(input.stock),
     updated_at: new Date().toISOString(),

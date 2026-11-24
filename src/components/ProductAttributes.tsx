@@ -25,6 +25,10 @@ export function ProductAttributes({ product, packaging = false }: ProductAttribu
       label: "Οικιακή χρήση",
       value: product.homeUse ? "Κατάλληλο" : "Μη κατάλληλο",
     },
+    {
+      label: "Πυρίμαχο",
+      value: product.fired ? "Ναι" : "Όχι",
+    },
   ].filter((attribute): attribute is { label: string; value: string } => Boolean(attribute));
 
   if (!attributes.length) return null;

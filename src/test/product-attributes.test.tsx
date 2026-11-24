@@ -22,6 +22,7 @@ const product: CatalogProduct = {
   care: null,
   glazed: null,
   homeUse: null,
+  fired: null,
 };
 
 describe("ProductAttributes", () => {
@@ -44,6 +45,7 @@ describe("ProductAttributes", () => {
           widthCm: 6,
           glazed: false,
           homeUse: false,
+          fired: false,
         }}
       />,
     );
@@ -52,5 +54,6 @@ describe("ProductAttributes", () => {
     expect(screen.getByText("Υ: 10 Μ: 8 Π: 6 cm")).toBeInTheDocument();
     expect(screen.getByText("Χωρίς υάλωμα")).toBeInTheDocument();
     expect(screen.getByText("Μη κατάλληλο")).toBeInTheDocument();
+    expect(screen.getByText("Όχι")).toBeInTheDocument();
   });
 });
