@@ -5,6 +5,7 @@ import { submitDeviceReview } from "@/lib/reviews";
 import { useDeviceId } from "@/hooks/useDeviceId";
 import { StarRatingPicker } from "@/components/ReviewStars";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import logo from "@/assets/logo-pilinimorfi.png";
 
 export function ReviewModal({
   open,
@@ -48,13 +49,24 @@ export function ReviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogTitle className="font-bold text-xl text-center">Αξιολογήστε μας</DialogTitle>
-        <DialogDescription className="mt-2 text-sm text-muted-foreground text-center">
+      <DialogContent className="sm:max-w-md p-2 pt-3">
+        <div className="flex items-center justify-center gap-2 mt-0 mb-0">
+          <img src={logo} alt="" aria-hidden="true" className="size-10 sm:size-12" />
+          <span className="font-display text-xl font-bold tracking-tight text-foreground">
+            Πήλινη Μορφή
+          </span>
+        </div>
+        <DialogTitle className="font-medium text-lg text-center mb-0">Αξιολογήστε μας</DialogTitle>
+        <DialogDescription className="mt-0 text-sm text-muted-foreground text-center">
           Πώς σας φάνηκε η εμπειρία σας;
         </DialogDescription>
-        <div className="mt-6 flex flex-col items-center gap-3 text-center">
-          <StarRatingPicker value={null} onChange={handleRate} disabled={submitting || rated} />
+        <div className="mt-0 flex flex-col items-center gap-1 text-center">
+          <StarRatingPicker
+            value={null}
+            onChange={handleRate}
+            disabled={submitting || rated}
+            starSize="small"
+          />
           {submitting && <p className="text-xs text-muted-foreground">Αποθήκευση…</p>}
           {rated && (
             <p className="text-xs font-medium text-primary">

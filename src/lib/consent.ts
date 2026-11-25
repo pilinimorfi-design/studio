@@ -52,7 +52,7 @@ type ConsentCallback = () => void;
 
 interface ConsentModalRequest {
   isOpen: boolean;
-  onAccepted?: ConsentCallback;
+  onAccepted?: ConsentCallback | undefined;
 }
 
 let currentModalState: ConsentModalRequest = { isOpen: false };

@@ -156,6 +156,7 @@ export const createSimulatedOrder = createServerFn({ method: "POST" })
 
       shippingPackages = quote.packages.map((parcel, index) => {
         const submitted = data.shippingPackages[index];
+        if (!submitted) throw new Error("Μη έγκυρο δεδομένο αποστολής.");
         const submittedItems = new Map(
           submitted.items.map((item) => [item.productId, item.quantity]),
         );
@@ -185,6 +186,7 @@ export const createSimulatedOrder = createServerFn({ method: "POST" })
         throw new Error("Η ACS υποστηρίζει προσωρινά ένα δέμα ανά παραγγελία.");
       }
       const submitted = data.shippingPackages[0];
+      if (!submitted) throw new Error("Μη έγκυρο δεδομένο αποστολής.");
       const submittedItems = new Map(
         submitted.items.map((item) => [item.productId, item.quantity]),
       );
@@ -206,6 +208,8 @@ export const createSimulatedOrder = createServerFn({ method: "POST" })
       ];
       shippingAmount = ACS_PRICE_PER_PARCEL;
     }
+
+    if (!shippingPackages[0]) throw new Error("Μη έγκυρο δεδομένο αποστολής.");
 
     const { data: orderId, error } = await supabaseAdmin.rpc(
       "create_simulated_guest_order_with_locker",

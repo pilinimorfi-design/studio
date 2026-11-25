@@ -5,13 +5,16 @@ export function StarRatingPicker({
   value,
   onChange,
   disabled = false,
+  starSize = "small",
 }: {
   value: number | null;
   onChange: (value: number) => void;
   disabled?: boolean;
+  starSize?: "small" | "large";
 }) {
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const displayRating = hoverRating !== null ? hoverRating : value;
+  const starCls = starSize === "large" ? "size-10" : "size-8";
 
   return (
     <div role="group" aria-label="Αξιολόγηση από 1 έως 5 αστέρια" className="flex gap-1">
@@ -27,9 +30,9 @@ export function StarRatingPicker({
             onClick={() => onChange(rating)}
             onMouseEnter={() => setHoverRating(rating)}
             onMouseLeave={() => setHoverRating(null)}
-            className="rounded-sm p-1 text-amber-500 transition-colors hover:text-amber-600 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-sm p-1 text-amber-500 transition-all duration-200 hover:text-amber-600 hover:scale-125 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Star className="size-8" fill={fill ? "currentColor" : "none"} />
+            <Star className={starCls} fill={fill ? "currentColor" : "none"} />
           </button>
         );
       })}

@@ -95,6 +95,7 @@ async function loadCart(cartToken: string): Promise<GuestCartItem[]> {
           care: row.care,
           glazed: row.glazed,
           homeUse: row.home_use,
+          fired: null,
         },
       },
     ];

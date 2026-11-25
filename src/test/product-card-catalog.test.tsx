@@ -13,7 +13,11 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 vi.mock("@/stores/cartStore", () => ({
   useCartStore: (
-    selector: (state: { addItem: () => Promise<void>; isLoading: boolean; items: unknown[] }) => unknown,
+    selector: (state: {
+      addItem: () => Promise<void>;
+      isLoading: boolean;
+      items: unknown[];
+    }) => unknown,
   ) => selector({ addItem: productCardMocks.addItem, isLoading: false, items: [] }),
 }));
 vi.mock("@/lib/consent", () => ({
@@ -39,6 +43,7 @@ const product: CatalogProduct = {
   care: null,
   glazed: null,
   homeUse: null,
+  fired: null,
 };
 
 describe("ProductCard — δημόσιος κατάλογος Supabase", () => {

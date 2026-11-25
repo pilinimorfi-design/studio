@@ -33,7 +33,7 @@ describe("BoxNow parcel packing", () => {
     const sizes = products.map((product) => {
       const result = packBoxNowItems([product]);
       expect(result.error).toBeNull();
-      return result.packages[0].size;
+      return result.packages[0]!.size;
     });
 
     expect(sizes).toEqual(["small", "medium", "large"]);
@@ -54,7 +54,7 @@ describe("BoxNow parcel packing", () => {
     expect(result.error).toBeNull();
     expect(result.packages).toHaveLength(2);
     expect(result.packages.map((parcel) => parcel.size)).toEqual(["large", "medium"]);
-    expect(result.packages.map((parcel) => parcel.items[0].quantity)).toEqual([8, 1]);
+    expect(result.packages.map((parcel) => parcel.items[0]!.quantity)).toEqual([8, 1]);
     expect(result.packages.reduce((total, parcel) => total + parcel.price, 0)).toBe(14);
   });
 
