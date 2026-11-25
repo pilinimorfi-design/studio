@@ -38,25 +38,28 @@ export const specialOrderSchema = z
   .superRefine((data, ctx) => {
     if (!data.deliveryWindowUnit) return;
     const minFrom = data.deliveryWindowUnit === "Ημέρες" ? 15 : 2;
-    const minTo = data.deliveryWindowUnit === "Ημέρες" ? 30 : 4;
     const unitLabel = data.deliveryWindowUnit === "Ημέρες" ? "ημέρες" : "εβδομάδες";
 
     if (data.deliveryWindowFrom == null || data.deliveryWindowFrom < minFrom) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Το 'Από' πρέπει να είναι τουλάχιστον ${minFrom} ${unitLabel} (ελάστIMO ${minFrom} ${unitLabel}).`,
+        message:
+          data.deliveryWindowUnit === "Ημέρες"
+            ? "Για το εργαστήριο απαιτείται ελάχιστος χρόνος 15 ημερών."
+            : data.deliveryWindowUnit === "Εβδομάδες"
+              ? "Για το εργαστήριο απαιτείται ελάχιστος χρόνος 2 εβδομάδων."
+              : `Το 'Από' πρέπει να είναι τουλάχιστον ${minFrom} ${unitLabel}.`,
         path: ["deliveryWindowFrom"],
       });
     }
 
     if (
       data.deliveryWindowTo == null ||
-      data.deliveryWindowTo < minTo ||
       (data.deliveryWindowFrom != null && data.deliveryWindowTo < data.deliveryWindowFrom)
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Το 'Έως' πρέπει να είναι τουλάχιστον ${minTo} ${unitLabel} (και ≥ 'Από').`,
+        message: `Το 'Έως' πρέπει να είναι >= του 'Από' (${data.deliveryWindowFrom ?? 0} ${unitLabel}).`,
         path: ["deliveryWindowTo"],
       });
     }

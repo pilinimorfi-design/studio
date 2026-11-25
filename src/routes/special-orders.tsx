@@ -82,7 +82,7 @@ const initialValues: SpecialOrderInput = {
   deliveryWindowUnit: "Ημέρες",
   deliveryWindowFrom: 15,
   deliveryWindowTo: 30,
-  deliveryWindow: "",
+  deliveryWindow: "Από 15 έως 30 Ημέρες",
 };
 
 type FieldErrors = Partial<Record<keyof SpecialOrderInput, string | undefined>>;
@@ -434,9 +434,6 @@ function SpecialOrdersPage() {
                   onBlur={validateDeliveryWindow}
                   aria-invalid={Boolean(errors.deliveryWindowFrom)}
                 />
-                {errors.deliveryWindowFrom && (
-                  <p className="mt-1 text-sm text-destructive">{errors.deliveryWindowFrom}</p>
-                )}
               </div>
               <div className="flex flex-col gap-1.5 w-[14ch]">
                 <label className="text-sm font-medium">Έως</label>
@@ -450,11 +447,13 @@ function SpecialOrdersPage() {
                   onBlur={validateDeliveryWindow}
                   aria-invalid={Boolean(errors.deliveryWindowTo)}
                 />
-                {errors.deliveryWindowTo && (
-                  <p className="mt-1 text-sm text-destructive">{errors.deliveryWindowTo}</p>
-                )}
               </div>
             </div>
+            {(errors.deliveryWindowFrom || errors.deliveryWindowTo) && (
+              <p className="mt-1 text-sm text-destructive" role="alert">
+                {errors.deliveryWindowFrom ?? errors.deliveryWindowTo}
+              </p>
+            )}
             {errors.deliveryWindow && (
               <p className="mt-1 text-sm text-destructive" role="alert">
                 {errors.deliveryWindow}
