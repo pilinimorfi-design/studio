@@ -1,15 +1,12 @@
 import { useEffect } from "react";
 import { useCartStore } from "@/stores/cartStore";
-import { hasCookieConsent } from "@/lib/consent";
 
 export function useCartSync() {
   const loadCart = useCartStore((s) => s.loadCart);
   useEffect(() => {
-    if (hasCookieConsent()) {
-      loadCart();
-    }
+    loadCart();
     const onVis = () => {
-      if (document.visibilityState === "visible" && hasCookieConsent()) {
+      if (document.visibilityState === "visible") {
         loadCart();
       }
     };

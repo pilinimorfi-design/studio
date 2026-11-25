@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, CreditCard, Info, Package, WalletCards } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import logo from "@/assets/logo-pilinimorfi.png";
 import { BoxNowLockerPicker } from "@/components/BoxNowLockerPicker";
 import { CookieBanner } from "@/components/CookieBanner";
-import { useCookieConsent, hasCookieConsent } from "@/lib/consent";
 import type { BoxNowLocker } from "@/lib/boxnow";
+import { useCookieConsent } from "@/lib/consent";
 import { createSimulatedOrder } from "@/lib/orders";
 import { lookupGreekPostalCode } from "@/lib/postal-code";
 import {
@@ -57,10 +58,6 @@ type CheckoutDraft = {
 const CHECKOUT_DRAFT_KEY = "pilinimorfi_checkout_draft";
 
 function loadDraft(): Partial<CheckoutDraft> | null {
-  if (!hasCookieConsent()) {
-    clearDraft();
-    return null;
-  }
   try {
     const raw = sessionStorage.getItem(CHECKOUT_DRAFT_KEY);
     if (!raw) return null;
@@ -73,7 +70,6 @@ function loadDraft(): Partial<CheckoutDraft> | null {
 }
 
 function saveDraft(draft: Partial<CheckoutDraft>) {
-  if (!hasCookieConsent()) return;
   try {
     sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(draft));
   } catch {
@@ -120,6 +116,7 @@ export function CheckoutPage() {
   const [shippingAddress, setShippingAddress] = useState(draft?.shippingAddress ?? "");
   const [shippingNotes, setShippingNotes] = useState(draft?.shippingNotes ?? "");
   const simulationEnabled = import.meta.env.DEV;
+  const navigate = useNavigate();
 
   const [hasConsent, updateConsent] = useCookieConsent();
 
@@ -128,28 +125,30 @@ export function CheckoutPage() {
   };
 
   const goBack = () => {
-    window.history.back();
+    try {
+      sessionStorage.setItem("open_cart_drawer", "true");
+    } catch {
+      // ignore
+    }
+    navigate({ to: "/" });
   };
 
   useEffect(() => {
-    if (hasConsent) {
-      saveDraft({
-        customerName,
-        email,
-        phone,
-        shippingAddress,
-        shippingNotes,
-        shippingMethod,
-        paymentMethod,
-        postalCode,
-        city,
-        village,
-        county,
-        selectedLockers,
-      });
-    }
+    saveDraft({
+      customerName,
+      email,
+      phone,
+      shippingAddress,
+      shippingNotes,
+      shippingMethod,
+      paymentMethod,
+      postalCode,
+      city,
+      village,
+      county,
+      selectedLockers,
+    });
   }, [
-    hasConsent,
     customerName,
     email,
     phone,
@@ -456,22 +455,20 @@ export function CheckoutPage() {
           shippingNotes: shippingNotes.trim(),
         },
       });
-      if (hasConsent) {
-        saveDraft({
-          customerName,
-          email,
-          phone,
-          shippingAddress,
-          shippingNotes,
-          shippingMethod,
-          paymentMethod,
-          postalCode,
-          city,
-          village,
-          county,
-          selectedLockers,
-        });
-      }
+      saveDraft({
+        customerName,
+        email,
+        phone,
+        shippingAddress,
+        shippingNotes,
+        shippingMethod,
+        paymentMethod,
+        postalCode,
+        city,
+        village,
+        county,
+        selectedLockers,
+      });
       window.location.assign(checkout.paymentUrl);
     } catch (error) {
       const serverErrors = getServerValidationErrors(error);
@@ -552,10 +549,7 @@ export function CheckoutPage() {
 
   return (
     <>
-      <div
-        className={hasConsent ? "" : "backdrop-blur-sm bg-black/40"}
-        style={{ minHeight: "100vh" }}
-      >
+      <div className="" style={{ minHeight: "100vh" }}>
         <div className="mx-auto max-w-6xl px-5 py-12 md:py-16">
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground">
             <ArrowLeft className="size-4" />
@@ -1216,11 +1210,24 @@ export function CheckoutPage() {
           showCookiePolicyLink={true}
           linkHref="/cookies?from=modal"
           message={
-            <p className="leading-relaxed">
-              Για να προχωρήσετε στο ταμείο και να ολοκληρώσετε την αγορά σας, απαιτείται η αποδοχή
-              της Πολιτικής Cookies για τη λειτουργία του καλαθιού και την επεξεργασία των
-              στοιχείων αποστολής.
-            </p>
+            <div className="space-y-3 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <img
+                  src={logo}
+                  alt=""
+                  aria-hidden="true"
+                  className="size-10 object-contain sm:size-12"
+                />
+                <span className="font-display text-xl font-semibold tracking-tight text-foreground">
+                  Πήλινη Μορφή
+                </span>
+              </div>
+              <p className="leading-relaxed text-center">
+                Για να προχωρήσετε στο ταμείο και να ολοκληρώσετε την αγορά σας, απαιτείται η
+                αποδοχή της Πολιτικής Cookies για τη λειτουργία του καλαθιού και την επεξεργασία των
+                στοιχείων αποστολής.
+              </p>
+            </div>
           }
           primaryLabel="Αποδοχή και συνέχεια"
           primaryVariant="default"

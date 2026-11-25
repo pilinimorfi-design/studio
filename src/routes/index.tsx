@@ -21,8 +21,6 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useDeviceId } from "@/hooks/useDeviceId";
-import { CookieBanner } from "@/components/CookieBanner";
-import { useCookieConsent } from "@/lib/consent";
 
 const ALL = "Όλα";
 const PAGE_SIZE = 6;
@@ -55,8 +53,6 @@ function Index() {
   const googleReviewUrl = getGoogleReviewUrl();
   const deviceId = useDeviceId();
   const queryClient = useQueryClient();
-  const [hasConsent, updateConsent] = useCookieConsent();
-  const [homeModalDismissed, setHomeModalDismissed] = useState(false);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [ipHash, setIpHash] = useState<string | null>(null);
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -113,24 +109,22 @@ function Index() {
     .map((product) => product.productType)
     .filter((type): type is string => Boolean(type));
   // Helper to normalize synonymous category names
-const normalizeCategory = (name: string): string => {
-  const trimmed = name.trim().toLocaleLowerCase("el");
-  if (trimmed === "βάζο") return "Βάζα";
-  // Preserve original capitalization for other names
-  return name;
-};
+  const normalizeCategory = (name: string): string => {
+    const trimmed = name.trim().toLocaleLowerCase("el");
+    if (trimmed === "βάζο") return "Βάζα";
+    // Preserve original capitalization for other names
+    return name;
+  };
 
-// Build the list of categories, merging synonyms and removing duplicates
-const rawCategories = [...new Set<string>([...CATEGORIES, ...productTypes])];
-const categories = [...new Set<string>(rawCategories.map(normalizeCategory))];
+  // Build the list of categories, merging synonyms and removing duplicates
+  const rawCategories = [...new Set<string>([...CATEGORIES, ...productTypes])];
+  const categories = [...new Set<string>(rawCategories.map(normalizeCategory))];
 
-// Filter visible products using normalized categories
-const visible = (products.data ?? []).filter(
-  (p) => {
+  // Filter visible products using normalized categories
+  const visible = (products.data ?? []).filter((p) => {
     const prodCat = normalizeCategory(p.productType ?? "");
     return category === ALL || prodCat === category;
-  },
-);
+  });
 
   const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -249,7 +243,9 @@ const visible = (products.data ?? []).filter(
                 const count =
                   c === ALL
                     ? (products.data?.length ?? 0)
-                    : (products.data ?? []).filter((p) => normalizeCategory(p.productType ?? "") === c).length;
+                    : (products.data ?? []).filter(
+                        (p) => normalizeCategory(p.productType ?? "") === c,
+                      ).length;
                 return (
                   <SelectItem
                     key={c}
@@ -408,33 +404,6 @@ const visible = (products.data ?? []).filter(
           </Button>
         </div>
       </section>
-      {!hasConsent && !homeModalDismissed && (
-        <CookieBanner
-          open
-          onClose={() => setHomeModalDismissed(true)}
-          showCookiePolicyLink={true}
-          linkHref="/cookies?from=modal"
-          message={
-            <div className="space-y-2">
-              <div>
-                <div>Καλώς ήρθατε στο εργαστήριο αγγειοπλαστικής</div>
-                <div className="font-bold text-primary mt-0.5">
-                  «Πήλινη Μορφή»
-                </div>
-              </div>
-              <p className="text-sm leading-relaxed">
-                Χρησιμοποιούμε μόνο τα απολύτως απαραίτητα τεχνικά στοιχεία για τη λειτουργία του ιστότοπου και του καλαθιού, χωρίς cookies παρακολούθησης ή διαφήμισης.
-              </p>
-            </div>
-          }
-          primaryLabel="Αποδοχή"
-          primaryVariant="default"
-          primaryOnClick={() => updateConsent(true)}
-          secondaryLabel="Συνέχεια χωρίς αποθήκευση"
-          secondaryVariant="outline"
-          secondaryOnClick={() => setHomeModalDismissed(true)}
-        />
-      )}
     </>
   );
 }

@@ -14,14 +14,11 @@ import {
 import { formatPrice } from "@/lib/shopify";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { useCartStore } from "@/stores/cartStore";
-import { CookieBanner } from "@/components/CookieBanner";
-import { useCookieConsent } from "@/lib/consent";
+import { useLocation } from "@tanstack/react-router";
 
 export function CartDrawer() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [hasConsent, updateConsent] = useCookieConsent();
-  const [consentModalOpen, setConsentModalOpen] = useState(false);
   const { items, isLoading, error, loadCart, updateQuantity, removeItem } = useCartStore();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce(
@@ -29,9 +26,22 @@ export function CartDrawer() {
     0,
   );
 
+  const location = useLocation();
+
   useEffect(() => {
     if (open) void loadCart();
   }, [open, loadCart]);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("open_cart_drawer") === "true") {
+        sessionStorage.removeItem("open_cart_drawer");
+        setOpen(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, [location.pathname]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -151,12 +161,8 @@ export function CartDrawer() {
                 size="lg"
                 className="w-full"
                 onClick={() => {
-                  if (!hasConsent) {
-                    setConsentModalOpen(true);
-                  } else {
-                    setOpen(false);
-                    navigate({ to: "/checkout" });
-                  }
+                  setOpen(false);
+                  navigate({ to: "/checkout" });
                 }}
               >
                 Συνέχεια στο ταμείο
@@ -168,32 +174,6 @@ export function CartDrawer() {
           </>
         )}
       </SheetContent>
-      {consentModalOpen && !hasConsent && (
-        <CookieBanner
-          open={consentModalOpen}
-          onClose={() => setConsentModalOpen(false)}
-          showCookiePolicyLink={true}
-          linkHref="/cookies?from=modal"
-          message={
-            <p className="leading-relaxed">
-              Για να προχωρήσετε στο ταμείο και να ολοκληρώσετε την αγορά σας, απαιτείται η αποδοχή
-              της Πολιτικής Cookies για τη λειτουργία του καλαθιού και την επεξεργασία των
-              στοιχείων αποστολής.
-            </p>
-          }
-          primaryLabel="Αποδοχή και συνέχεια"
-          primaryVariant="default"
-          primaryOnClick={() => {
-            updateConsent(true);
-            setConsentModalOpen(false);
-            setOpen(false);
-            navigate({ to: "/checkout" });
-          }}
-          secondaryLabel="Συνέχεια χωρίς αποθήκευση"
-          secondaryVariant="outline"
-          secondaryOnClick={() => setConsentModalOpen(false)}
-        />
-      )}
     </Sheet>
   );
 }

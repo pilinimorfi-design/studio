@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { hasCookieConsent, requestCookieConsent } from "@/lib/consent";
 
 import {
   addGuestCartItem,
@@ -39,10 +38,6 @@ export const useCartStore = create<CartStore>()(
       clearLocalCart: () => set({ items: [], error: null }),
 
       loadCart: async () => {
-        if (!hasCookieConsent()) {
-          set({ items: [], cartToken: null, error: null });
-          return;
-        }
         const { cartToken } = get();
         if (!cartToken) return;
         try {
@@ -55,12 +50,6 @@ export const useCartStore = create<CartStore>()(
       },
 
       addItem: async (product) => {
-        if (!hasCookieConsent()) {
-          requestCookieConsent(async () => {
-            await get().addItem(product);
-          });
-          return;
-        }
         set({ isLoading: true, error: null });
         try {
           const cartToken = getOrCreateCartToken(get().cartToken);
@@ -127,30 +116,28 @@ export const useCartStore = create<CartStore>()(
       name: "guest-cart",
       storage: createJSONStorage(() => ({
         getItem: (name: string) => {
-          if (!hasCookieConsent()) return null;
           try {
-            return localStorage.getItem(name);
+            return sessionStorage.getItem(name);
           } catch {
             return null;
           }
         },
         setItem: (name: string, value: string) => {
-          if (!hasCookieConsent()) return;
           try {
-            localStorage.setItem(name, value);
+            sessionStorage.setItem(name, value);
           } catch {
             // ignore
           }
         },
         removeItem: (name: string) => {
           try {
-            localStorage.removeItem(name);
+            sessionStorage.removeItem(name);
           } catch {
             // ignore
           }
         },
       })),
-      partialize: (state) => ({ cartToken: state.cartToken, items: [] }),
+      partialize: (state) => ({ cartToken: state.cartToken, items: state.items }),
     },
   ),
 );

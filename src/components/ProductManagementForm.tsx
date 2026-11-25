@@ -75,14 +75,40 @@ const greekTransliteration: Record<string, string> = {
   ω: "o",
 };
 
+const KNOWN_CATEGORY_SLUGS: Record<string, string> = {
+  βαζα: "baza",
+  βαζο: "baza",
+  κουπες: "cups",
+  κουπα: "cups",
+  γλαστρες: "glastres",
+  γλαστρα: "glastres",
+  μπολ: "mpol",
+  πιατα: "piata",
+  πιατο: "piata",
+  τασακια: "tasakia",
+  τασακι: "tasakia",
+  ρεσο: "reso",
+  θηκες: "thikes",
+  θηκη: "thikes",
+};
+
 function categoryToSlug(value: string): string {
-  return value
+  const normalized = value
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/[α-ως]/g, (char) => greekTransliteration[char] ?? char)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "general";
+    .trim();
+
+  if (KNOWN_CATEGORY_SLUGS[normalized]) {
+    return KNOWN_CATEGORY_SLUGS[normalized];
+  }
+
+  return (
+    normalized
+      .replace(/[α-ως]/g, (char) => greekTransliteration[char] ?? char)
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "general"
+  );
 }
 
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: string }) {
@@ -376,10 +402,23 @@ export function ProductManagementForm() {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         setUploadError("");
+
+                        if (!form.categoryId) {
+                          setUploadError(
+                            "Επιλέξτε πρώτα κατηγορία προϊόντος πριν ανεβάσετε φωτογραφία.",
+                          );
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                          return;
+                        }
+
                         setIsUploading(true);
                         try {
-                          const selectedCat = categories.data?.find((c) => c.id === form.categoryId);
-                          const categorySlug = selectedCat ? categoryToSlug(selectedCat.name) : "general";
+                          const selectedCat = categories.data?.find(
+                            (c) => c.id === form.categoryId,
+                          );
+                          const categorySlug = selectedCat
+                            ? categoryToSlug(selectedCat.name)
+                            : "general";
                           const ext = file.name.split(".").pop() ?? "jpg";
                           const path = `${categorySlug}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
@@ -389,7 +428,11 @@ export function ProductManagementForm() {
                             .from(bucketName)
                             .upload(path, file, { upsert: false });
 
-                          if (uploadErr && (uploadErr.message?.includes("Bucket not found") || (uploadErr as { statusCode?: string }).statusCode === "404")) {
+                          if (
+                            uploadErr &&
+                            (uploadErr.message?.includes("Bucket not found") ||
+                              (uploadErr as { statusCode?: string }).statusCode === "404")
+                          ) {
                             bucketName = "product-images";
                             const fallbackResult = await supabase.storage
                               .from(bucketName)

@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { CheckCircle2 } from "lucide-react";
 
+import logo from "@/assets/logo-pilinimorfi.png";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -571,11 +572,22 @@ function SpecialOrdersPage() {
           showCookiePolicyLink={true}
           linkHref="/cookies?from=modal"
           message={
-            <div className="space-y-2 text-center">
+            <div className="space-y-3 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <img
+                  src={logo}
+                  alt=""
+                  aria-hidden="true"
+                  className="size-10 object-contain sm:size-12"
+                />
+                <span className="font-display text-xl font-semibold tracking-tight text-foreground">
+                  Πήλινη Μορφή
+                </span>
+              </div>
               <p className="leading-relaxed text-center">
-                Τα στοιχεία της φόρμας ειδικής παραγγελίας αποθηκεύονται προσωρινά στη μνήμη συνεδρίας
-                του περιηγητή σας, προκειμένου να μην χάνονται σε περίπτωση ανανέωσης ή κλεισίματος
-                της καρτέλας.
+                Τα στοιχεία της φόρμας ειδικής παραγγελίας αποθηκεύονται προσωρινά στη μνήμη
+                συνεδρίας του περιηγητή σας, προκειμένου να μην χάνονται σε περίπτωση ανανέωσης ή
+                κλεισίματος της καρτέλας.
               </p>
               <p className="leading-relaxed text-muted-foreground text-xs sm:text-[13px] text-center">
                 Διαγράφονται αυτόματα μετά την αποστολή ή το κλείσιμο του browser.
